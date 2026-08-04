@@ -7,6 +7,7 @@ export const VACIO = {
     base: 0,
     aportaciones: [],
     precioCasa: null,
+    entradaPct: null, // vacío = al contado
     impuestosPct: 10,
     colchonPct: 15,
     objetivoManual: null,
@@ -195,14 +196,29 @@ export function totales(d) {
  *  es justo cuando más margen hace falta. */
 export function objetivo(d) {
   const t = totales(d);
-  const casa = Number(d.dinero.precioCasa) || 0;
-  const impuestos = casa * ((Number(d.dinero.impuestosPct) || 0) / 100);
+  const precio = Number(d.dinero.precioCasa) || 0;
+
+  /* Con hipoteca, de la casa solo tienes que ahorrar la entrada. Vacío = al
+     contado, y entonces hay que ahorrar el precio entero. */
+  const pct = d.dinero.entradaPct;
+  const esHipoteca = pct != null;
+  const casa = esHipoteca ? precio * ((Number(pct) || 0) / 100) : precio;
+
+  /* Los impuestos van sobre el precio entero aunque haya hipoteca, y no sobre
+     la entrada: el banco presta contra el valor de la casa, pero el ITP, la
+     notaría y el registro salen de tu bolsillo el mismo día. Escalarlos con la
+     entrada es el error que deja a la gente corta de dinero en la firma. */
+  const impuestos = precio * ((Number(d.dinero.impuestosPct) || 0) / 100);
+
   const antesDelColchon = casa + impuestos + t.imprescindible;
   const colchon = antesDelColchon * ((Number(d.dinero.colchonPct) || 0) / 100);
   const calculado = antesDelColchon + colchon;
   const manual = d.dinero.objetivoManual;
   return {
+    precio,
     casa,
+    esHipoteca,
+    entradaPct: esHipoteca ? Number(pct) || 0 : null,
     impuestos,
     obra: t.imprescindible,
     antesDelColchon,

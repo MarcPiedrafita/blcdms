@@ -224,6 +224,70 @@ describe("objetivo de ahorro", () => {
     expect(o.valor).toBe(0);
     expect(o.esManual).toBe(true);
   });
+
+  it("sin entrada puesta se entiende que es al contado", () => {
+    const o = objetivo(datos(base));
+    expect(o.esHipoteca).toBe(false);
+    expect(o.entradaPct).toBe(null);
+    expect(o.casa).toBe(o.precio);
+  });
+});
+
+describe("objetivo con hipoteca", () => {
+  const conEntrada = (entradaPct) =>
+    objetivo(
+      datos({
+        dinero: { precioCasa: 58000, impuestosPct: 10, colchonPct: 15, entradaPct },
+        elementos: [elemento("imprescindible", [{ cantidad: 1, precio: 4000 }])],
+      })
+    );
+
+  it("de la casa solo se ahorra la entrada", () => {
+    const o = conEntrada(20);
+    expect(o.esHipoteca).toBe(true);
+    expect(o.precio).toBe(58000);
+    expect(o.casa).toBe(11600);
+  });
+
+  /* El error que deja a la gente corta en la firma: el banco presta contra el
+     valor de la casa, pero el ITP y la notaría salen de tu bolsillo ese mismo
+     día. Escalarlos con la entrada sería contar 1.160 € en vez de 5.800 €. */
+  it("los impuestos siguen yendo sobre el precio entero", () => {
+    expect(conEntrada(20).impuestos).toBe(5800);
+    expect(conEntrada(20).impuestos).toBe(objetivo(datos({ dinero: { precioCasa: 58000, impuestosPct: 10 } })).impuestos);
+  });
+
+  it("el colchón se calcula sobre la entrada, no sobre el precio", () => {
+    const o = conEntrada(20);
+    expect(o.antesDelColchon).toBe(21400); // 11.600 + 5.800 + 4.000
+    expect(o.colchon).toBe(3210);
+    expect(o.calculado).toBe(24610);
+  });
+
+  /* Lo que motivó el arreglo: a contado le salían 77.970 €. */
+  it("baja mucho el objetivo respecto a pagar a contado", () => {
+    const contado = objetivo(
+      datos({
+        dinero: { precioCasa: 58000, impuestosPct: 10, colchonPct: 15 },
+        elementos: [elemento("imprescindible", [{ cantidad: 1, precio: 4000 }])],
+      })
+    );
+    expect(contado.calculado).toBe(77970);
+    expect(conEntrada(20).calculado).toBeLessThan(contado.calculado / 3);
+  });
+
+  it("una entrada del 100% cuesta lo mismo que pagar a contado", () => {
+    expect(conEntrada(100).calculado).toBe(77970);
+  });
+
+  /* Una hipoteca al 100% existe, y aun así hay que ahorrar impuestos y obra. */
+  it("con entrada cero sigue habiendo objetivo", () => {
+    const o = conEntrada(0);
+    expect(o.casa).toBe(0);
+    expect(o.esHipoteca).toBe(true);
+    expect(o.antesDelColchon).toBe(9800); // impuestos + obra
+    expect(o.calculado).toBe(11270);
+  });
 });
 
 describe("ahorrado", () => {

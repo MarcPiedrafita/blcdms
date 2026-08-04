@@ -61,7 +61,7 @@ export default function Dinero({ datos, onGuardar, onQuitar }) {
         <div className="desg">
           <span className="n">
             <i className="punto p-casa" />
-            Precio de la casa
+            {obj.esHipoteca ? `Entrada (${obj.entradaPct}% de ${eur(obj.precio)})` : "Precio de la casa"}
           </span>
           <span className="c">{eur(obj.casa)}</span>
         </div>
@@ -131,6 +131,24 @@ export default function Dinero({ datos, onGuardar, onQuitar }) {
                 placeholder="55000"
               />
             </div>
+            <div style={{ marginBottom: 12 }}>
+              <label className="lab" htmlFor="entrada">
+                Entrada % (vacío = al contado)
+              </label>
+              <input
+                id="entrada"
+                inputMode="decimal"
+                value={d.entradaPct ?? ""}
+                onChange={(e) => set("entradaPct", num(e.target.value))}
+                placeholder="20"
+              />
+              <div className="ayuda">
+                {d.entradaPct == null
+                  ? "Vacío significa que pagas la casa entera de tu bolsillo. Si vais con hipoteca, pon aquí el porcentaje de entrada y el objetivo bajará a lo que de verdad tienes que ahorrar."
+                  : `Ahorras la entrada, no la casa entera. Los impuestos siguen calculándose sobre los ${eur(obj.precio)} completos: el banco presta contra la casa, pero el ITP y la notaría los pagas tú el día de la firma.`}
+              </div>
+            </div>
+
             <div className="fila" style={{ marginBottom: 12 }}>
               <div>
                 <label className="lab" htmlFor="impuestos">
