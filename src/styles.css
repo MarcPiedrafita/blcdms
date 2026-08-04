@@ -664,6 +664,139 @@ select {
   border-color: transparent;
 }
 
+/* ---------- trámites ---------- */
+
+.item-tram {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--linea2);
+}
+
+.item-tram .cuerpo {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  transition: opacity 0.15s;
+}
+
+.item-tram .cuerpo:active {
+  opacity: 0.55;
+}
+
+.item-tram .nom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.item-tram .nom .ico {
+  flex: none;
+  color: var(--suave);
+}
+
+.item-tram .det {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--suave);
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+/* Casilla de 40 px de zona táctil aunque el cuadro se vea de 22. */
+.marca-hecho {
+  flex: none;
+  position: relative;
+  width: 40px;
+  height: 40px;
+  margin: -9px 0 0 -9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sobre-senal);
+}
+
+.marca-hecho::before {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--linea);
+  border-radius: 2px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.marca-hecho .ico {
+  position: relative;
+  stroke-width: 2.4;
+}
+
+.item-tram.hecho .marca-hecho::before {
+  background: var(--senal);
+  border-color: transparent;
+}
+
+/* Lo hecho se apaga, pero se sigue leyendo: sirve de registro de lo que ya
+   pasó, no es basura que esconder. */
+.item-tram.hecho .cuerpo {
+  opacity: 0.42;
+}
+
+.item-tram.hecho .nom span {
+  text-decoration: line-through;
+}
+
+.urg {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 3px 7px 3px 0;
+  color: var(--suave);
+}
+
+/* La urgencia se dice con una barra a la izquierda, no con el texto en color:
+   texto de color sobre grafito se lee peor y compite con la señal. */
+.urg::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 11px;
+  margin-right: 7px;
+  vertical-align: -1px;
+  background: var(--linea);
+}
+
+.urg.u-antelacion::before {
+  background: var(--rojo);
+}
+
+.urg.u-justo::before {
+  background: var(--ambar);
+}
+
+.urg.u-suelto::before {
+  background: var(--linea);
+}
+
+/* Los tres niveles de urgencia no caben en una fila legible: en columna cada
+   uno se lee entero. */
+.seg.col {
+  flex-direction: column;
+}
+
+.seg.col button + button {
+  border-left: none;
+  border-top: 1px solid var(--linea);
+}
+
 .chip.extra {
   border-style: dashed;
 }
@@ -804,19 +937,41 @@ select {
 
 .tabs button {
   flex: 1;
+  min-width: 0;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
   font-family: var(--mono);
-  font-size: 9.5px;
-  letter-spacing: 0.09em;
+  font-size: 9px;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   font-weight: 600;
   color: var(--suave);
-  padding: 14px 0 10px;
+  padding: 11px 2px 8px;
   transition: color 0.15s;
+}
+
+/* Con seis pestañas, «Máquinas» y «Trámites» ya no caben enteras en las
+   pantallas estrechas: el icono es el que identifica y el rótulo se recorta
+   antes que desbordar. */
+.tabs button > span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tabs button.on {
   color: var(--tinta);
+}
+
+/* El icono de la pestaña activa se va a señal, como la banda de arriba: es la
+   misma marca dicha dos veces, y a este tamaño el color se lee antes que la
+   forma. */
+.tabs button.on .ico {
+  color: var(--senal);
 }
 
 /* La pestaña activa se marca con una banda de señal arriba del todo. */

@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   VACIO,
+  nuevoTramite,
+  TIPOS_TRAMITE,
+  URGENCIAS,
   leer,
   escribir,
   KEY,
@@ -370,6 +373,19 @@ describe("almacenamiento", () => {
     expect(d.dinero.impuestosPct).toBe(10);
   });
 
+  /* Los trámites llegaron después: hay copias por ahí que no traen el campo, y
+     sin esto la pestaña reventaría al recorrer un undefined. */
+  it("una copia anterior a los trámites se abre con la lista vacía", () => {
+    almacen.set(KEY, JSON.stringify({ categorias: [], elementos: [], ideas: [] }));
+    expect(leer().tramites).toEqual([]);
+  });
+
+  it("los trámites guardados se recuperan", () => {
+    const t = { ...nuevoTramite(), nombre: "Licencia de obra" };
+    escribir(datos({ tramites: [t] }));
+    expect(leer().tramites).toEqual([t]);
+  });
+
   it("un json corrupto no tira la app, devuelve el estado vacío", () => {
     almacen.set(KEY, "{esto no es json");
     expect(leer()).toEqual(VACIO);
@@ -380,5 +396,44 @@ describe("almacenamiento", () => {
       throw new Error("cuota llena");
     };
     expect(escribir(datos())).toBe(false);
+  });
+});
+
+describe("trámites", () => {
+  it("un trámite nuevo nace pendiente y con el tipo más común", () => {
+    const t = nuevoTramite();
+    expect(t.tipo).toBe("tramite");
+    expect(t.hecho).toBe(false);
+    expect(t.nombre).toBe("");
+    expect(t.descripcion).toBe("");
+  });
+
+  /* Nace en el nivel más exigente a propósito: si te equivocas, que sea por
+     adelantarte y no por llegar tarde a pedir una licencia. */
+  it("nace en el nivel más urgente", () => {
+    expect(nuevoTramite().urgencia).toBe("antelacion");
+  });
+
+  it("cada trámite tiene su propio id", () => {
+    expect(nuevoTramite().id).not.toBe(nuevoTramite().id);
+  });
+
+  it("el tipo y la urgencia de fábrica existen en sus listas", () => {
+    const t = nuevoTramite();
+    expect(TIPOS_TRAMITE.map(([k]) => k)).toContain(t.tipo);
+    expect(URGENCIAS.map(([k]) => k)).toContain(t.urgencia);
+  });
+
+  it("hay tres tipos y tres urgencias, cada uno con su rótulo", () => {
+    expect(TIPOS_TRAMITE).toHaveLength(3);
+    expect(URGENCIAS).toHaveLength(3);
+    for (const [k, l] of [...TIPOS_TRAMITE, ...URGENCIAS]) {
+      expect(k).toBeTruthy();
+      expect(l).toBeTruthy();
+    }
+  });
+
+  it("el estado vacío trae la lista de trámites", () => {
+    expect(VACIO.tramites).toEqual([]);
   });
 });
