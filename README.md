@@ -20,9 +20,9 @@ Todo lo que se borra deja siete segundos para deshacerlo. Cualquier otro cambio 
 
 ## Aspecto
 
-Grafito sobre cal, con amarillo de alta visibilidad como única señal: botón principal, partidas imprescindibles, avance del ahorro y pestaña activa. Nada más va en amarillo.
+Oscuro siempre, no lo que diga el teléfono. Grafito, con amarillo de alta visibilidad como única señal: botón principal, partidas imprescindibles, avance del ahorro y pestaña activa. Nada más va en amarillo.
 
-Tres tipografías, servidas desde `public/fonts` para que la app abra sin cobertura: **Bricolage Grotesque** para los rótulos y las cifras grandes, **Instrument Sans** para el texto y **IBM Plex Mono** para todo lo que es medida —unidades, cantidades, fechas e importes en columna—. Sigue el tema claro u oscuro del teléfono.
+Tres tipografías, servidas desde `public/fonts` para que la app abra sin cobertura: **Bricolage Grotesque** para los rótulos y las cifras grandes, **Instrument Sans** para el texto y **IBM Plex Mono** para todo lo que es medida —unidades, cantidades, fechas e importes en columna—.
 
 ## En local
 

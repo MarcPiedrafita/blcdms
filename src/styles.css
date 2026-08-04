@@ -1,7 +1,7 @@
 /* ==========================================================================
    La obra — cuaderno de obra
-   Grafito sobre cal, señalización de alta visibilidad y una capa mono para
-   todo lo que es medida: unidades, cantidades, fechas e importes.
+   Grafito, señalización de alta visibilidad y una capa mono para todo lo que
+   es medida: unidades, cantidades, fechas e importes.
    ========================================================================== */
 
 @font-face {
@@ -36,54 +36,34 @@
 
 /* ---------- tokens ---------- */
 
+/* Oscuro siempre, no lo que diga el sistema. */
 :root {
-  --cal: #f2f1ec;
-  --panel: #ffffff;
-  --panel2: #fbfaf6;
-  --tinta: #15171a;
-  --suave: #6c7075;
-  --linea: #dcdad2;
-  --linea2: #ebe9e2;
+  --fondo: #111315;
+  --panel: #191c1f;
+  --panel2: #202327;
+  --tinta: #ecebe6;
+  --suave: #8b9096;
+  --linea: #2c3035;
+  --linea2: #24272b;
 
   /* La señal. Siempre como relleno con tinta encima, nunca como texto. */
-  --senal: #e2ff26;
-  --sobre-senal: #15171a;
+  --senal: #dcff1f;
+  --sobre-senal: #111315;
 
-  --verde: #0f6b48;
-  --rojo: #bd2a1b;
-  --ambar: #9a6400;
+  --verde: #3ecf94;
+  --rojo: #ff6f5e;
+  --ambar: #e2ad4e;
 
   --display: "Bricolage Grotesque", "Helvetica Neue", sans-serif;
   --texto: "Instrument Sans", -apple-system, BlinkMacSystemFont, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
 
   --r: 3px;
-  --sombra: 0 1px 0 rgba(21, 23, 26, 0.04), 0 2px 10px -6px rgba(21, 23, 26, 0.16);
+  --sombra: 0 1px 0 rgba(0, 0, 0, 0.4), 0 2px 12px -6px rgba(0, 0, 0, 0.7);
 
   /* Para que el calendario del campo de fecha y las barras de scroll
-     acompañen al tema en vez de quedarse en claro. */
-  color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --cal: #111315;
-    --panel: #191c1f;
-    --panel2: #202327;
-    --tinta: #ecebe6;
-    --suave: #8b9096;
-    --linea: #2c3035;
-    --linea2: #24272b;
-
-    --senal: #dcff1f;
-    --sobre-senal: #111315;
-
-    --verde: #3ecf94;
-    --rojo: #ff6f5e;
-    --ambar: #e2ad4e;
-
-    --sombra: 0 1px 0 rgba(0, 0, 0, 0.4), 0 2px 12px -6px rgba(0, 0, 0, 0.7);
-  }
+     salgan oscuros en vez de quedarse en blanco. */
+  color-scheme: dark;
 }
 
 * {
@@ -100,7 +80,7 @@ body {
   font-family: var(--texto);
   font-size: 15px;
   color: var(--tinta);
-  background: var(--cal);
+  background: var(--fondo);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -271,7 +251,7 @@ select {
 
 .btn {
   background: var(--tinta);
-  color: var(--cal);
+  color: var(--fondo);
   padding: 14px 18px;
   border-radius: var(--r);
   font-family: var(--mono);
@@ -338,7 +318,7 @@ select {
 
 .seg button.on {
   background: var(--tinta);
-  color: var(--cal);
+  color: var(--fondo);
 }
 
 /* ---------- cifras ---------- */
@@ -710,7 +690,7 @@ select {
   bottom: 0;
   left: 0;
   right: 0;
-  background: color-mix(in srgb, var(--cal) 88%, transparent);
+  background: color-mix(in srgb, var(--fondo) 88%, transparent);
   backdrop-filter: saturate(1.6) blur(14px);
   -webkit-backdrop-filter: saturate(1.6) blur(14px);
   border-top: 1px solid var(--linea);
@@ -883,7 +863,7 @@ select {
   gap: 12px;
   padding: 12px 12px 12px 15px;
   background: var(--tinta);
-  color: var(--cal);
+  color: var(--fondo);
   border-radius: var(--r);
   box-shadow: 0 8px 30px -10px rgba(0, 0, 0, 0.6);
   animation: sube 0.24s cubic-bezier(0.2, 0.85, 0.25, 1);
