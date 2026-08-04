@@ -2,3 +2,7 @@ node_modules
 dist
 .DS_Store
 .vercel
+
+# Supabase: se ponen en Vercel, no aquí
+.env
+.env.local

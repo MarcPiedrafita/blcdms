@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
-import { leer, escribir } from "./lib.js";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { leer, escribir, VACIO } from "./lib.js";
+import { useNube } from "./useNube.js";
 import Dinero from "./Dinero.jsx";
 import Presupuesto from "./Presupuesto.jsx";
 import Maquinaria from "./Maquinaria.jsx";
@@ -28,6 +29,15 @@ export default function App() {
     escribir(nuevo);
   };
 
+  /* Adoptar lo que viene del servidor no es un cambio tuyo: escribe igual,
+     pero no marca nada como pendiente de subir. Si lo marcara, cada bajada
+     dispararía una subida y los dos aparatos se rebotarían para siempre. */
+  const adoptar = useCallback((remoto) => {
+    aplicar({ ...VACIO, ...remoto, dinero: { ...VACIO.dinero, ...(remoto?.dinero || {}) } });
+  }, []);
+
+  const nube = useNube(datos, adoptar);
+
   const olvidar = () => {
     clearTimeout(reloj.current);
     setDeshacer(null);
@@ -36,6 +46,7 @@ export default function App() {
   const guardar = (nuevo) => {
     olvidar();
     aplicar(nuevo);
+    nube.marcarCambio();
   };
 
   /* Borrar guarda el estado anterior y deja siete segundos para arrepentirse.
@@ -45,6 +56,7 @@ export default function App() {
     const previo = datos;
     clearTimeout(reloj.current);
     aplicar(nuevo);
+    nube.marcarCambio();
     setDeshacer({ texto, previo });
     reloj.current = setTimeout(() => setDeshacer(null), ESPERA);
   };
@@ -74,7 +86,7 @@ export default function App() {
         {tab === "presupuesto" && <Presupuesto {...comun} />}
         {tab === "maquinaria" && <Maquinaria {...comun} />}
         {tab === "ideas" && <Ideas {...comun} irAElemento={irAElemento} />}
-        {tab === "copia" && <Copia datos={datos} onGuardar={guardar} />}
+        {tab === "copia" && <Copia datos={datos} onGuardar={guardar} nube={nube} />}
       </div>
 
       {deshacer && (
@@ -85,6 +97,7 @@ export default function App() {
               const previo = deshacer.previo;
               olvidar();
               aplicar(previo);
+              nube.marcarCambio(); // deshacer también es un cambio que subir
             }}
           >
             Deshacer

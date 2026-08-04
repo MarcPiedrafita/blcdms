@@ -1,7 +1,9 @@
 import React, { useRef, useState } from "react";
 import { VACIO, eur, totales, objetivo, ahorrado } from "./lib.js";
+import Sincronizacion from "./Sincronizacion.jsx";
+import { hayNube } from "./nube.js";
 
-export default function Copia({ datos, onGuardar }) {
+export default function Copia({ datos, onGuardar, nube }) {
   const input = useRef(null);
   const [msg, setMsg] = useState(null);
   const [pendiente, setPendiente] = useState(null);
@@ -92,11 +94,19 @@ export default function Copia({ datos, onGuardar }) {
       </header>
 
       <div className="tit">Qué es esto</div>
-      <p className="parrafo">
-        Esta app guarda todo <b>dentro de este móvil</b>. No hay cuenta, ni servidor, ni nada tuyo en
-        internet. Nadie más lo ve, pero tampoco hay nada en la nube que te salve si le pasa algo al
-        teléfono.
-      </p>
+      {hayNube() ? (
+        <p className="parrafo">
+          Esta app guarda todo <b>dentro de este aparato</b>, y si entras con tu correo ahí abajo, además
+          lo lleva a los demás. Aun así conviene la copia: es un fichero tuyo, que no depende de ninguna
+          cuenta ni de que el servidor siga ahí dentro de cinco años.
+        </p>
+      ) : (
+        <p className="parrafo">
+          Esta app guarda todo <b>dentro de este móvil</b>. No hay cuenta, ni servidor, ni nada tuyo en
+          internet. Nadie más lo ve, pero tampoco hay nada en la nube que te salve si le pasa algo al
+          teléfono.
+        </p>
+      )}
       <p className="parrafo">
         Una <b>copia</b> es un fichero con todos tus datos dentro. Le das a exportar, se descarga, y lo
         guardas donde quieras: Archivos, Drive, o un correo a ti mismo. Si cambias de móvil o borras la app
@@ -105,12 +115,15 @@ export default function Copia({ datos, onGuardar }) {
       </p>
       <p className="parrafo">Hazla de vez en cuando. Es lo único que hay entre tus datos y perderlos.</p>
 
+      {nube && <Sincronizacion nube={nube} />}
+
       <div className="blq">
         <div className="aviso">
-          <b>Cuándo se pierde todo</b>
+          <b>Cuándo se pierde lo de este aparato</b>
           <br />
           Si borras los datos de navegación, cambias de teléfono o lo abres en modo incógnito. En iPhone,
           además, se borra solo si no abres la app en siete días.
+          {hayNube() && " Con la sincronización puesta lo recuperas entrando otra vez con tu correo."}
         </div>
       </div>
 

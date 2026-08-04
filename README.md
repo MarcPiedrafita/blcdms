@@ -46,6 +46,32 @@ Cada push a `main` publica en Vercel. La primera vez hay que enlazar el reposito
 
 En cada push y en cada pull request, GitHub Actions pasa los tests y compila (`.github/workflows/ci.yml`).
 
+## Sincronizar entre aparatos (opcional)
+
+Sin configurar nada, la app es local: cada aparato tiene sus datos y no se hablan. Con Supabase enlazado, entras con tu correo en el móvil y en el ordenador y los dos ven lo mismo.
+
+Es opcional de verdad: si faltan las dos variables de entorno, no se carga ni la librería de Supabase y la app se comporta exactamente igual que antes.
+
+**Local primero.** Escribir sigue siendo instantáneo y contra el propio aparato, así que la app funciona sin cobertura —que es la mitad de las veces que se abre estando en la obra—. Subir es un efecto secundario: ocurre dos segundos después del último cambio, al recuperar la conexión y al volver a la app. Lo pendiente espera.
+
+**Qué hay que hacer:**
+
+1. Crear un proyecto en [supabase.com](https://supabase.com). El plan gratuito sobra.
+2. **SQL Editor** → pegar `supabase/schema.sql` entero → *Run*. Crea la tabla, el trigger de la marca de tiempo y la política que impide que nadie lea los datos de otro.
+3. **Authentication → Providers**: dejar *Email* activado y **desactivar «Confirm email»** si quieres entrar con el enlace a la primera.
+4. **Authentication → URL Configuration**: añadir `https://blcdms.vercel.app` a *Site URL* y a *Redirect URLs*. Sin esto el enlace del correo no vuelve a la app.
+5. **Project Settings → API**: copiar *Project URL* y la clave *anon public*.
+6. En Vercel, **Settings → Environment Variables**, añadir las dos y volver a desplegar:
+
+```
+VITE_SUPABASE_URL=https://xxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGci...
+```
+
+La clave `anon` es pública por diseño: va dentro del JavaScript que descarga el navegador. Lo que protege los datos no es esa clave, es la política de la base de datos del paso 2. Sin ese paso, cualquiera podría leerlo todo.
+
+**Si editas en dos sitios a la vez.** Cada aparato guarda cuándo cambió algo por última vez y con qué marca del servidor cuadró. Si los dos lados han cambiado desde entonces, la app no elige: para, lo dice, y te enseña las dos fechas para que decidas. Lo que descartes se pierde, así que la copia en `.json` sigue teniendo sentido aunque esto esté puesto.
+
 ## Instalarlo en el móvil
 
 - Android (Chrome): menú ⋮ → *Añadir a pantalla de inicio*.
@@ -54,17 +80,23 @@ En cada push y en cada pull request, GitHub Actions pasa los tests y compila (`.
 ## Estructura del código
 
 ```
-src/lib.js           datos, almacenamiento y todos los cálculos
-src/lib.test.js      tests de los cálculos
-src/App.jsx          pestañas y deshacer
-src/Dinero.jsx       ahorros y objetivo
-src/Presupuesto.jsx  categorías, elementos y líneas
-src/Maquinaria.jsx   alquilar o comprar
-src/Ideas.jsx        notas
-src/Copia.jsx        exportar e importar
-src/styles.css       estilos
-public/fonts/        tipografías
-public/sw.js         caché para funcionar sin internet
+src/lib.js              datos, almacenamiento y todos los cálculos
+src/lib.test.js         tests de los cálculos
+src/sync.js             estado de sincronización y qué hacer con él
+src/sync.test.js        tests de esa decisión
+src/nube.js             Supabase: sesión, bajar y subir
+src/useNube.js          cuándo sincronizar, cosido a React
+src/App.jsx             pestañas y deshacer
+src/Dinero.jsx          ahorros y objetivo
+src/Presupuesto.jsx     categorías, elementos y líneas
+src/Maquinaria.jsx      alquilar o comprar
+src/Ideas.jsx           notas
+src/Copia.jsx           exportar e importar
+src/Sincronizacion.jsx  entrar, estado y conflictos
+src/styles.css          estilos
+supabase/schema.sql     tabla, trigger y permisos
+public/fonts/           tipografías
+public/sw.js            caché para funcionar sin internet
 ```
 
-Toda la lógica de cifras está en `lib.js` y está cubierta por tests. Si mañana esto pasa a Supabase, lo único que cambia son las funciones `leer` y `escribir` de ese fichero.
+Toda la lógica de cifras está en `lib.js` y está cubierta por tests. La decisión de qué hacer al sincronizar está en `sync.js`, aparte de la red y también cubierta: es donde se pierden datos si te equivocas, así que no depende de tener un servidor delante para probarla.
