@@ -15,6 +15,7 @@ export const VACIO = {
   elementos: [],
   maquinas: [],
   ideas: [],
+  tramites: [],
   ultimaCopia: null,
 };
 
@@ -31,6 +32,8 @@ export function leer() {
       elementos: d.elementos || [],
       maquinas: d.maquinas || [],
       ideas: d.ideas || [],
+      // Una copia hecha antes de que existieran los trámites no trae el campo.
+      tramites: d.tramites || [],
     };
   } catch (e) {
     return VACIO;
@@ -120,6 +123,32 @@ export const nuevaIdea = () => ({
   texto: "",
   etiqueta: "casa",
   creada: Date.now(),
+});
+
+/* Los tres tipos separan cosas que se gestionan distinto: un trámite se pide y
+   se espera, un documento se guarda y se enseña, y un pago tiene fecha límite
+   y se paga tarde con recargo. */
+export const TIPOS_TRAMITE = [
+  ["tramite", "Trámite"],
+  ["documento", "Documento"],
+  ["pago", "Pago"],
+];
+
+/* Lo único que importa antes de arrancar: si esto te va a frenar. */
+export const URGENCIAS = [
+  ["antelacion", "Con mucha antelación"],
+  ["justo", "Justo antes"],
+  ["suelto", "No frena la obra"],
+];
+
+export const nuevoTramite = () => ({
+  id: uid(),
+  tipo: "tramite",
+  nombre: "",
+  descripcion: "",
+  urgencia: "antelacion",
+  hecho: false,
+  creado: Date.now(),
 });
 
 /* ---------- cálculos ---------- */

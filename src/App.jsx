@@ -5,14 +5,17 @@ import Dinero from "./Dinero.jsx";
 import Presupuesto from "./Presupuesto.jsx";
 import Maquinaria from "./Maquinaria.jsx";
 import Ideas from "./Ideas.jsx";
+import Tramites from "./Tramites.jsx";
 import Copia from "./Copia.jsx";
+import { IcoDinero, IcoObra, IcoMaquinas, IcoIdeas, IcoTramites, IcoCopia } from "./Iconos.jsx";
 
 const TABS = [
-  ["dinero", "Dinero"],
-  ["presupuesto", "Obra"],
-  ["maquinaria", "Máquinas"],
-  ["ideas", "Ideas"],
-  ["copia", "Copia"],
+  ["dinero", "Dinero", IcoDinero],
+  ["presupuesto", "Obra", IcoObra],
+  ["maquinaria", "Máquinas", IcoMaquinas],
+  ["ideas", "Ideas", IcoIdeas],
+  ["tramites", "Trámites", IcoTramites],
+  ["copia", "Copia", IcoCopia],
 ];
 
 const ESPERA = 7000;
@@ -86,6 +89,7 @@ export default function App() {
         {tab === "presupuesto" && <Presupuesto {...comun} />}
         {tab === "maquinaria" && <Maquinaria {...comun} />}
         {tab === "ideas" && <Ideas {...comun} irAElemento={irAElemento} />}
+        {tab === "tramites" && <Tramites {...comun} />}
         {tab === "copia" && <Copia datos={datos} onGuardar={guardar} nube={nube} />}
       </div>
 
@@ -106,14 +110,15 @@ export default function App() {
       )}
 
       <nav className="tabs">
-        {TABS.map(([k, t]) => (
+        {TABS.map(([k, t, Ico]) => (
           <button
             key={k}
             className={tab === k ? "on" : ""}
             aria-current={tab === k ? "page" : undefined}
             onClick={() => cambiarTab(k)}
           >
-            {t}
+            <Ico tam={20} />
+            <span>{t}</span>
           </button>
         ))}
       </nav>

@@ -12,6 +12,8 @@ Presupuesto de la reforma de la casa. React + Vite, sin servidor. Los datos se g
 
 **Ideas.** Notas libres con etiqueta casa o patio. Sin precios. Botón para convertir una idea en elemento del presupuesto; el texto pasa a las notas del elemento.
 
+**Trámites.** El papeleo, que también frena una obra. Cada apunte es de un tipo —**trámite** (se pide y se espera), **documento** (se guarda y se enseña) o **pago** (tiene fecha límite y recargo)— con nombre, descripción y, lo que de verdad importa, cuánta antelación necesita: con mucha, justo antes, o ninguna. La lista se ordena sola por esa urgencia y lo marcado como hecho baja al fondo sin borrarse, que sirve de registro. La cabecera cuenta lo pendiente y cuánto de ello hay que pedir con tiempo.
+
 **Copia.** Exportar e importar un `.json`. Empieza explicando qué es y por qué hace falta, porque «Copia» a secas no dice nada: los datos viven solo en el móvil y el fichero es lo único que hay entre ellos y perderlos. Avisa en rojo si hace más de treinta días de la última copia. En el móvil sale el menú de compartir, para guardarla en Archivos o mandársela a quien sea.
 
 Nada tiene botón de guardar: cada cambio se escribe solo. Las fichas de obra, máquinas e ideas llevan al final un botón para encadenar la siguiente sin volver a la lista.
@@ -25,6 +27,8 @@ Todo lo que se borra deja siete segundos para deshacerlo. Cualquier otro cambio 
 Oscuro siempre, no lo que diga el teléfono. Grafito, con amarillo de alta visibilidad como única señal: botón principal, partidas imprescindibles y pestaña activa. Nada más va en amarillo.
 
 La rueda del objetivo usa cuatro variantes de ese amarillo, de honda a clara en el mismo orden en que se listan las partidas. La escala va en ese sentido y no al revés porque el precio de la casa se come tres cuartos del anillo: con el tono más claro encima, esa masa deslumbra y el amarillo vivo acaba en las porciones diminutas. Honda abajo, el bulto queda tranquilo y lo que se ilumina es el colchón, que es precisamente el dinero que todavía es aire.
+
+Los iconos están dibujados a mano sobre una retícula de 24 en `Iconos.jsx`, no traídos de una librería: así pesan cero y siguen la misma geometría recta del resto. Nada de emojis —un emoji lo pinta el sistema operativo, así que cambia de forma y de color en cada teléfono y trae su propia paleta de fábrica, justo lo contrario de una app que usa un solo color como señal—. Todos van a `currentColor`, así que nunca se salen de la paleta, y el de la pestaña activa se va a amarillo como la banda de arriba.
 
 Tres tipografías, servidas desde `public/fonts` para que la app abra sin cobertura: **Bricolage Grotesque** para los rótulos y las cifras grandes, **Instrument Sans** para el texto y **IBM Plex Mono** para todo lo que es medida —unidades, cantidades, fechas e importes en columna—.
 
@@ -100,6 +104,8 @@ src/Rueda.jsx           la rueda: composición del objetivo y avance
 src/Presupuesto.jsx     categorías, elementos y líneas
 src/Maquinaria.jsx      alquilar o comprar
 src/Ideas.jsx           notas
+src/Tramites.jsx        papeleo, con tipo y urgencia
+src/Iconos.jsx          los iconos, dibujados a mano
 src/Copia.jsx           exportar e importar
 src/Sincronizacion.jsx  entrar, estado y conflictos
 src/styles.css          estilos
