@@ -76,6 +76,11 @@ export default function Dinero({ datos, onGuardar, onQuitar }) {
           <span className="n">
             <i className="punto p-obra" />
             Imprescindibles para entrar a vivir
+            {t.tramites > 0 && (
+              <span className="matiz">
+                obra y máquinas {eur(obj.obra - t.tramites)} · trámites {eur(t.tramites)}
+              </span>
+            )}
           </span>
           <span className="c">{eur(obj.obra)}</span>
         </div>

@@ -148,6 +148,7 @@ export const nuevoTramite = () => ({
   nombre: "",
   descripcion: "",
   urgencia: "antelacion",
+  coste: null, // vacío = todavía no sabes lo que cuesta, o no cuesta nada
   hecho: false,
   creado: Date.now(),
 });
@@ -184,9 +185,20 @@ export function totales(d) {
   for (const e of d.elementos) r.obra[e.fase] += totalElemento(e);
   for (const m of d.maquinas) r.maquinaria[m.fase] += costeMaquina(m).coste;
 
-  const imprescindible = r.obra.imprescindible + r.maquinaria.imprescindible;
+  /* Los trámites que cuestan dinero cuentan enteros como imprescindibles: sin
+     la licencia no hay obra y sin la cédula no entras a vivir, así que no hay
+     versión «extra» de esto.
+
+     Lo ya marcado como hecho sigue sumando a propósito. La app no lleva el
+     gasto real, así que lo que has pagado no se descuenta de tus ahorros: si
+     además lo quitara del objetivo, el objetivo bajaría mientras el ahorro se
+     queda igual y parecerías más cerca de lo que estás. Sumando siempre, los
+     dos lados se quedan quietos y la diferencia sigue siendo verdad. */
+  const tramites = (d.tramites || []).reduce((s, t) => s + (Number(t.coste) || 0), 0);
+
+  const imprescindible = r.obra.imprescindible + r.maquinaria.imprescindible + tramites;
   const extra = r.obra.extra + r.maquinaria.extra;
-  return { ...r, imprescindible, extra, total: imprescindible + extra };
+  return { ...r, tramites, imprescindible, extra, total: imprescindible + extra };
 }
 
 /** Objetivo de ahorro: casa + impuestos + imprescindibles, y encima el colchón.

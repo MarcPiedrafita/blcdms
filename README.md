@@ -14,7 +14,9 @@ Con el campo de entrada vacío se entiende que pagas la casa entera de tu bolsil
 
 **Ideas.** Notas libres con etiqueta casa o patio. Sin precios. Botón para convertir una idea en elemento del presupuesto; el texto pasa a las notas del elemento.
 
-**Trámites.** El papeleo, que también frena una obra. Cada apunte es de un tipo —**trámite** (se pide y se espera), **documento** (se guarda y se enseña) o **pago** (tiene fecha límite y recargo)— con nombre, descripción y, lo que de verdad importa, cuánta antelación necesita: con mucha, justo antes, o ninguna. La lista se ordena sola por esa urgencia y lo marcado como hecho baja al fondo sin borrarse, que sirve de registro. La cabecera cuenta lo pendiente y cuánto de ello hay que pedir con tiempo.
+**Trámites.** El papeleo, que también frena una obra. Cada apunte es de un tipo —**trámite** (se pide y se espera), **documento** (se guarda y se enseña) o **pago** (tiene fecha límite y recargo)— con nombre, descripción, lo que cuesta y, lo que de verdad importa, cuánta antelación necesita: con mucha, justo antes, o ninguna.
+
+Lo que cuesta un trámite cuenta entero como imprescindible y sube el objetivo de ahorro, igual que una partida de obra: sin la licencia no hay obra y sin la cédula no entras a vivir, así que no hay versión «extra» de esto. Lo ya marcado como hecho sigue sumando a propósito — la app no lleva el gasto real, así que lo pagado no se descuenta de tus ahorros; si además se cayera del objetivo, el objetivo bajaría mientras el ahorro se queda igual y parecerías más cerca de lo que estás. La lista se ordena sola por esa urgencia y lo marcado como hecho baja al fondo sin borrarse, que sirve de registro. La cabecera cuenta lo pendiente y cuánto de ello hay que pedir con tiempo.
 
 **Copia.** Exportar e importar un `.json`. Empieza explicando qué es y por qué hace falta, porque «Copia» a secas no dice nada: los datos viven solo en el móvil y el fichero es lo único que hay entre ellos y perderlos. Avisa en rojo si hace más de treinta días de la última copia. En el móvil sale el menú de compartir, para guardarla en Archivos o mandársela a quien sea.
 

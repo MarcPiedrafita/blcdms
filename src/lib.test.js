@@ -500,4 +500,62 @@ describe("trámites", () => {
   it("el estado vacío trae la lista de trámites", () => {
     expect(VACIO.tramites).toEqual([]);
   });
+
+  it("un trámite nuevo no cuesta nada hasta que le pones precio", () => {
+    expect(nuevoTramite().coste).toBe(null);
+  });
+});
+
+describe("lo que cuestan los trámites", () => {
+  const con = (tramites) => datos({ tramites: tramites.map((t) => ({ ...nuevoTramite(), ...t })) });
+
+  it("suma los costes y van al imprescindible", () => {
+    const t = totales(con([{ coste: 180 }, { coste: 420 }]));
+    expect(t.tramites).toBe(600);
+    expect(t.imprescindible).toBe(600);
+    expect(t.extra).toBe(0);
+    expect(t.total).toBe(600);
+  });
+
+  it("los que no tienen coste no suman", () => {
+    expect(totales(con([{ coste: null }, { coste: 300 }])).tramites).toBe(300);
+  });
+
+  /* La app no lleva el gasto real, así que lo pagado no se descuenta de los
+     ahorros. Si además se cayera del objetivo, el objetivo bajaría mientras el
+     ahorro se queda igual y parecerías más cerca de lo que estás. */
+  it("un trámite ya hecho sigue contando", () => {
+    expect(totales(con([{ coste: 400, hecho: true }])).tramites).toBe(400);
+  });
+
+  it("se suman a la obra, no la sustituyen", () => {
+    const d = datos({
+      elementos: [elemento("imprescindible", [{ cantidad: 1, precio: 1000 }])],
+      tramites: [{ ...nuevoTramite(), coste: 250 }],
+    });
+    const t = totales(d);
+    expect(t.obra.imprescindible).toBe(1000);
+    expect(t.imprescindible).toBe(1250);
+  });
+
+  it("suben el objetivo de ahorro y también el colchón", () => {
+    const base = { precioCasa: 50000, impuestosPct: 10, colchonPct: 10 };
+    const sin = objetivo(datos({ dinero: base }));
+    const conTramite = objetivo(datos({ dinero: base, tramites: [{ ...nuevoTramite(), coste: 1000 }] }));
+    expect(sin.calculado).toBe(60500); // (50.000 + 5.000) × 1,1
+    expect(conTramite.obra).toBe(1000);
+    expect(conTramite.calculado).toBe(61600); // (50.000 + 5.000 + 1.000) × 1,1
+  });
+
+  it("sin trámites el total sigue siendo el de antes", () => {
+    expect(totales(datos()).tramites).toBe(0);
+    expect(totales(datos()).imprescindible).toBe(0);
+  });
+
+  /* Una copia vieja no trae la lista, y totales se llama en cada render. */
+  it("no revienta si no hay lista de trámites", () => {
+    const d = { ...VACIO, dinero: VACIO.dinero };
+    delete d.tramites;
+    expect(totales(d).tramites).toBe(0);
+  });
 });
