@@ -7,6 +7,7 @@ export const VACIO = {
     base: 0,
     aportaciones: [],
     precioCasa: null,
+    entradaPct: null, // vacío = al contado
     impuestosPct: 10,
     colchonPct: 15,
     objetivoManual: null,
@@ -147,6 +148,7 @@ export const nuevoTramite = () => ({
   nombre: "",
   descripcion: "",
   urgencia: "antelacion",
+  coste: null, // vacío = todavía no sabes lo que cuesta, o no cuesta nada
   hecho: false,
   creado: Date.now(),
 });
@@ -183,9 +185,20 @@ export function totales(d) {
   for (const e of d.elementos) r.obra[e.fase] += totalElemento(e);
   for (const m of d.maquinas) r.maquinaria[m.fase] += costeMaquina(m).coste;
 
-  const imprescindible = r.obra.imprescindible + r.maquinaria.imprescindible;
+  /* Los trámites que cuestan dinero cuentan enteros como imprescindibles: sin
+     la licencia no hay obra y sin la cédula no entras a vivir, así que no hay
+     versión «extra» de esto.
+
+     Lo ya marcado como hecho sigue sumando a propósito. La app no lleva el
+     gasto real, así que lo que has pagado no se descuenta de tus ahorros: si
+     además lo quitara del objetivo, el objetivo bajaría mientras el ahorro se
+     queda igual y parecerías más cerca de lo que estás. Sumando siempre, los
+     dos lados se quedan quietos y la diferencia sigue siendo verdad. */
+  const tramites = (d.tramites || []).reduce((s, t) => s + (Number(t.coste) || 0), 0);
+
+  const imprescindible = r.obra.imprescindible + r.maquinaria.imprescindible + tramites;
   const extra = r.obra.extra + r.maquinaria.extra;
-  return { ...r, imprescindible, extra, total: imprescindible + extra };
+  return { ...r, tramites, imprescindible, extra, total: imprescindible + extra };
 }
 
 /** Objetivo de ahorro: casa + impuestos + imprescindibles, y encima el colchón.
@@ -195,14 +208,29 @@ export function totales(d) {
  *  es justo cuando más margen hace falta. */
 export function objetivo(d) {
   const t = totales(d);
-  const casa = Number(d.dinero.precioCasa) || 0;
-  const impuestos = casa * ((Number(d.dinero.impuestosPct) || 0) / 100);
+  const precio = Number(d.dinero.precioCasa) || 0;
+
+  /* Con hipoteca, de la casa solo tienes que ahorrar la entrada. Vacío = al
+     contado, y entonces hay que ahorrar el precio entero. */
+  const pct = d.dinero.entradaPct;
+  const esHipoteca = pct != null;
+  const casa = esHipoteca ? precio * ((Number(pct) || 0) / 100) : precio;
+
+  /* Los impuestos van sobre el precio entero aunque haya hipoteca, y no sobre
+     la entrada: el banco presta contra el valor de la casa, pero el ITP, la
+     notaría y el registro salen de tu bolsillo el mismo día. Escalarlos con la
+     entrada es el error que deja a la gente corta de dinero en la firma. */
+  const impuestos = precio * ((Number(d.dinero.impuestosPct) || 0) / 100);
+
   const antesDelColchon = casa + impuestos + t.imprescindible;
   const colchon = antesDelColchon * ((Number(d.dinero.colchonPct) || 0) / 100);
   const calculado = antesDelColchon + colchon;
   const manual = d.dinero.objetivoManual;
   return {
+    precio,
     casa,
+    esHipoteca,
+    entradaPct: esHipoteca ? Number(pct) || 0 : null,
     impuestos,
     obra: t.imprescindible,
     antesDelColchon,

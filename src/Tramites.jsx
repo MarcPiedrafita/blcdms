@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { nuevoTramite, TIPOS_TRAMITE, URGENCIAS } from "./lib.js";
+import { nuevoTramite, num, eur, totales, TIPOS_TRAMITE, URGENCIAS } from "./lib.js";
 import { IcoSello, IcoDocumento, IcoDinero, IcoHecho } from "./Iconos.jsx";
 
 const ICONO = { tramite: IcoSello, documento: IcoDocumento, pago: IcoDinero };
@@ -69,6 +69,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
   const lista = [...datos.tramites].filter((t) => filtro === "todo" || t.tipo === filtro).sort(ordenar);
   const pendientes = datos.tramites.filter((t) => !t.hecho).length;
   const frenan = datos.tramites.filter((t) => !t.hecho && t.urgencia === "antelacion").length;
+  const cuestan = totales(datos).tramites;
 
   return (
     <>
@@ -79,6 +80,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
         <div className="sub">
           {pendientes} {pendientes === 1 ? "pendiente" : "pendientes"}
           {frenan > 0 && ` · ${frenan} con antelación`}
+          {cuestan > 0 && ` · ${eur(cuestan)}`}
         </div>
       </header>
 
@@ -120,8 +122,9 @@ function Lista({ datos, onGuardar, setAbierto }) {
                   <span>{t.nombre || "Sin nombre"}</span>
                 </div>
                 {t.descripcion && <div className="det">{t.descripcion.slice(0, 110)}{t.descripcion.length > 110 ? "…" : ""}</div>}
-                <div style={{ marginTop: 7 }}>
+                <div style={{ marginTop: 7, display: "flex", alignItems: "center", gap: 10 }}>
                   <span className={`urg u-${t.urgencia}`}>{NOMBRE_URGENCIA[t.urgencia]}</span>
+                  {t.coste != null && <span className="coste-tram">{eur(t.coste)}</span>}
                 </div>
               </button>
             </div>
@@ -190,6 +193,23 @@ function Ficha({ tramite, onCambio, onBorrar, onOtro, onVolver }) {
             : tramite.urgencia === "justo"
             ? "Se puede resolver poco antes de empezar, pero antes."
             : "Puede esperar a que la obra esté en marcha."}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 13 }}>
+        <label className="lab" htmlFor="tram-coste">
+          Lo que cuesta € (vacío = nada, o todavía no lo sabes)
+        </label>
+        <input
+          id="tram-coste"
+          inputMode="decimal"
+          value={tramite.coste ?? ""}
+          onChange={(e) => set("coste", num(e.target.value))}
+          placeholder="180"
+        />
+        <div className="ayuda">
+          Cuenta como imprescindible y sube el objetivo de ahorro, igual que una partida de obra. Sin la
+          licencia no hay obra, así que no hay versión opcional de esto.
         </div>
       </div>
 

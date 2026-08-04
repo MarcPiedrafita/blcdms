@@ -544,6 +544,18 @@ select {
   color: var(--suave);
 }
 
+/* Segunda línea del rótulo de una fila del desglose, para decir de dónde sale
+   una cifra sin abrir otro bloque. */
+.matiz {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0;
+  color: var(--suave);
+  opacity: 0.75;
+  margin-top: 3px;
+}
+
 .desg .c {
   font-family: var(--mono);
   font-weight: 600;
@@ -749,6 +761,15 @@ select {
 
 .item-tram.hecho .nom span {
   text-decoration: line-through;
+}
+
+.coste-tram {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--tinta);
 }
 
 .urg {

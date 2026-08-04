@@ -224,6 +224,70 @@ describe("objetivo de ahorro", () => {
     expect(o.valor).toBe(0);
     expect(o.esManual).toBe(true);
   });
+
+  it("sin entrada puesta se entiende que es al contado", () => {
+    const o = objetivo(datos(base));
+    expect(o.esHipoteca).toBe(false);
+    expect(o.entradaPct).toBe(null);
+    expect(o.casa).toBe(o.precio);
+  });
+});
+
+describe("objetivo con hipoteca", () => {
+  const conEntrada = (entradaPct) =>
+    objetivo(
+      datos({
+        dinero: { precioCasa: 58000, impuestosPct: 10, colchonPct: 15, entradaPct },
+        elementos: [elemento("imprescindible", [{ cantidad: 1, precio: 4000 }])],
+      })
+    );
+
+  it("de la casa solo se ahorra la entrada", () => {
+    const o = conEntrada(20);
+    expect(o.esHipoteca).toBe(true);
+    expect(o.precio).toBe(58000);
+    expect(o.casa).toBe(11600);
+  });
+
+  /* El error que deja a la gente corta en la firma: el banco presta contra el
+     valor de la casa, pero el ITP y la notaría salen de tu bolsillo ese mismo
+     día. Escalarlos con la entrada sería contar 1.160 € en vez de 5.800 €. */
+  it("los impuestos siguen yendo sobre el precio entero", () => {
+    expect(conEntrada(20).impuestos).toBe(5800);
+    expect(conEntrada(20).impuestos).toBe(objetivo(datos({ dinero: { precioCasa: 58000, impuestosPct: 10 } })).impuestos);
+  });
+
+  it("el colchón se calcula sobre la entrada, no sobre el precio", () => {
+    const o = conEntrada(20);
+    expect(o.antesDelColchon).toBe(21400); // 11.600 + 5.800 + 4.000
+    expect(o.colchon).toBe(3210);
+    expect(o.calculado).toBe(24610);
+  });
+
+  /* Lo que motivó el arreglo: a contado le salían 77.970 €. */
+  it("baja mucho el objetivo respecto a pagar a contado", () => {
+    const contado = objetivo(
+      datos({
+        dinero: { precioCasa: 58000, impuestosPct: 10, colchonPct: 15 },
+        elementos: [elemento("imprescindible", [{ cantidad: 1, precio: 4000 }])],
+      })
+    );
+    expect(contado.calculado).toBe(77970);
+    expect(conEntrada(20).calculado).toBeLessThan(contado.calculado / 3);
+  });
+
+  it("una entrada del 100% cuesta lo mismo que pagar a contado", () => {
+    expect(conEntrada(100).calculado).toBe(77970);
+  });
+
+  /* Una hipoteca al 100% existe, y aun así hay que ahorrar impuestos y obra. */
+  it("con entrada cero sigue habiendo objetivo", () => {
+    const o = conEntrada(0);
+    expect(o.casa).toBe(0);
+    expect(o.esHipoteca).toBe(true);
+    expect(o.antesDelColchon).toBe(9800); // impuestos + obra
+    expect(o.calculado).toBe(11270);
+  });
 });
 
 describe("ahorrado", () => {
@@ -435,5 +499,63 @@ describe("trámites", () => {
 
   it("el estado vacío trae la lista de trámites", () => {
     expect(VACIO.tramites).toEqual([]);
+  });
+
+  it("un trámite nuevo no cuesta nada hasta que le pones precio", () => {
+    expect(nuevoTramite().coste).toBe(null);
+  });
+});
+
+describe("lo que cuestan los trámites", () => {
+  const con = (tramites) => datos({ tramites: tramites.map((t) => ({ ...nuevoTramite(), ...t })) });
+
+  it("suma los costes y van al imprescindible", () => {
+    const t = totales(con([{ coste: 180 }, { coste: 420 }]));
+    expect(t.tramites).toBe(600);
+    expect(t.imprescindible).toBe(600);
+    expect(t.extra).toBe(0);
+    expect(t.total).toBe(600);
+  });
+
+  it("los que no tienen coste no suman", () => {
+    expect(totales(con([{ coste: null }, { coste: 300 }])).tramites).toBe(300);
+  });
+
+  /* La app no lleva el gasto real, así que lo pagado no se descuenta de los
+     ahorros. Si además se cayera del objetivo, el objetivo bajaría mientras el
+     ahorro se queda igual y parecerías más cerca de lo que estás. */
+  it("un trámite ya hecho sigue contando", () => {
+    expect(totales(con([{ coste: 400, hecho: true }])).tramites).toBe(400);
+  });
+
+  it("se suman a la obra, no la sustituyen", () => {
+    const d = datos({
+      elementos: [elemento("imprescindible", [{ cantidad: 1, precio: 1000 }])],
+      tramites: [{ ...nuevoTramite(), coste: 250 }],
+    });
+    const t = totales(d);
+    expect(t.obra.imprescindible).toBe(1000);
+    expect(t.imprescindible).toBe(1250);
+  });
+
+  it("suben el objetivo de ahorro y también el colchón", () => {
+    const base = { precioCasa: 50000, impuestosPct: 10, colchonPct: 10 };
+    const sin = objetivo(datos({ dinero: base }));
+    const conTramite = objetivo(datos({ dinero: base, tramites: [{ ...nuevoTramite(), coste: 1000 }] }));
+    expect(sin.calculado).toBe(60500); // (50.000 + 5.000) × 1,1
+    expect(conTramite.obra).toBe(1000);
+    expect(conTramite.calculado).toBe(61600); // (50.000 + 5.000 + 1.000) × 1,1
+  });
+
+  it("sin trámites el total sigue siendo el de antes", () => {
+    expect(totales(datos()).tramites).toBe(0);
+    expect(totales(datos()).imprescindible).toBe(0);
+  });
+
+  /* Una copia vieja no trae la lista, y totales se llama en cada render. */
+  it("no revienta si no hay lista de trámites", () => {
+    const d = { ...VACIO, dinero: VACIO.dinero };
+    delete d.tramites;
+    expect(totales(d).tramites).toBe(0);
   });
 });

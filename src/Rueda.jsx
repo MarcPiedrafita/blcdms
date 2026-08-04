@@ -27,7 +27,11 @@ const CP = 2 * Math.PI * RP;
 const HUECO = 5;
 
 export default function Rueda({ obj, tengo, pct }) {
-  const partidas = PARTES.map(([k, n]) => ({ k, n, valor: obj[k] || 0 }));
+  const partidas = PARTES.map(([k, n]) => ({
+    k,
+    n: k === "casa" && obj.esHipoteca ? "Entrada de la casa" : n,
+    valor: obj[k] || 0,
+  }));
   const costes = partidas.reduce((a, t) => a + t.valor, 0);
 
   /* Con el objetivo forzado a mano por encima de lo calculado, las cuatro
