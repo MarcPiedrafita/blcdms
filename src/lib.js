@@ -159,18 +159,24 @@ export function totales(d) {
   return { ...r, imprescindible, extra, total: imprescindible + extra };
 }
 
-/** Objetivo de ahorro: casa + impuestos + imprescindibles + colchón. */
+/** Objetivo de ahorro: casa + impuestos + imprescindibles, y encima el colchón.
+ *
+ *  El colchón va sobre la suma de todo, no solo sobre la obra. Calculándolo
+ *  solo sobre la obra salía 0 € mientras el presupuesto estuviera vacío, que
+ *  es justo cuando más margen hace falta. */
 export function objetivo(d) {
   const t = totales(d);
   const casa = Number(d.dinero.precioCasa) || 0;
   const impuestos = casa * ((Number(d.dinero.impuestosPct) || 0) / 100);
-  const colchon = t.imprescindible * ((Number(d.dinero.colchonPct) || 0) / 100);
-  const calculado = casa + impuestos + t.imprescindible + colchon;
+  const antesDelColchon = casa + impuestos + t.imprescindible;
+  const colchon = antesDelColchon * ((Number(d.dinero.colchonPct) || 0) / 100);
+  const calculado = antesDelColchon + colchon;
   const manual = d.dinero.objetivoManual;
   return {
     casa,
     impuestos,
     obra: t.imprescindible,
+    antesDelColchon,
     colchon,
     calculado,
     valor: manual != null ? Number(manual) : calculado,

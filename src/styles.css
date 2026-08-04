@@ -238,13 +238,16 @@ select {
   margin-top: 26px;
 }
 
+/* El título de sección manda sobre todo lo que va debajo. A 19px se quedaba
+   por debajo del nombre de categoría (21), del estado vacío (21) y de la
+   cifra del total (20), así que la jerarquía estaba del revés. */
 .tit {
   font-family: var(--display);
-  font-size: 19px;
+  font-size: 24px;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  font-variation-settings: "wdth" 88, "opsz" 24;
-  margin-bottom: 14px;
+  letter-spacing: -0.03em;
+  font-variation-settings: "wdth" 86, "opsz" 28;
+  margin-bottom: 16px;
 }
 
 /* ---------- botones ---------- */
@@ -761,6 +764,23 @@ select {
   letter-spacing: -0.02em;
 }
 
+/* Texto que se lee de verdad, no una nota al pie: la explicación de qué es
+   una copia tiene que entenderse sin esfuerzo. */
+.parrafo {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--tinta);
+  margin: 0 0 12px;
+}
+
+.parrafo:last-of-type {
+  margin-bottom: 0;
+}
+
+.parrafo b {
+  font-weight: 700;
+}
+
 .vacio {
   text-align: center;
   padding: 48px 16px;
@@ -771,10 +791,12 @@ select {
   border-radius: var(--r);
 }
 
+/* Es un mensaje de estado vacío, no un encabezado: no debe gritar más que
+   el título de la sección que lo contiene. */
 .vacio b {
   font-family: var(--display);
   display: block;
-  font-size: 21px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.03em;
   font-variation-settings: "wdth" 86, "opsz" 24;

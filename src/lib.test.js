@@ -183,9 +183,10 @@ describe("objetivo de ahorro", () => {
     expect(o.casa).toBe(58000);
     expect(o.impuestos).toBe(5800);
     expect(o.obra).toBe(4000);
-    expect(o.colchon).toBe(600);
-    expect(o.calculado).toBe(68400);
-    expect(o.valor).toBe(68400);
+    expect(o.antesDelColchon).toBe(67800);
+    expect(o.colchon).toBe(10170);
+    expect(o.calculado).toBe(77970);
+    expect(o.valor).toBe(77970);
     expect(o.esManual).toBe(false);
   });
 
@@ -194,15 +195,24 @@ describe("objetivo de ahorro", () => {
     expect(objetivo(datos(base)).calculado).toBe(objetivo(sinExtra).calculado);
   });
 
-  it("el colchón se calcula solo sobre lo imprescindible", () => {
+  it("el colchón se calcula sobre la casa, los impuestos y la obra", () => {
     const o = objetivo(datos(base));
-    expect(o.colchon).toBe(o.obra * 0.15);
+    expect(o.colchon).toBe((o.casa + o.impuestos + o.obra) * 0.15);
+  });
+
+  /* El colchón salía 0 € mientras no hubiera obra metida, que es justo
+     cuando más margen hace falta. */
+  it("hay colchón aunque el presupuesto de obra esté vacío", () => {
+    const o = objetivo(datos({ ...base, elementos: [] }));
+    expect(o.obra).toBe(0);
+    expect(o.colchon).toBe(9570); // 15% de 58.000 + 5.800
+    expect(o.calculado).toBe(73370);
   });
 
   it("el objetivo a mano manda, pero se sigue viendo el calculado", () => {
     const o = objetivo(datos({ ...base, dinero: { ...base.dinero, objetivoManual: 80000 } }));
     expect(o.valor).toBe(80000);
-    expect(o.calculado).toBe(68400);
+    expect(o.calculado).toBe(77970);
     expect(o.esManual).toBe(true);
   });
 
@@ -307,8 +317,14 @@ describe("previsión", () => {
 
   it("devuelve el plazo, el ritmo y lo que falta", () => {
     const haceUnAno = new Date(Date.now() - 12 * 30.4 * 86400000).toISOString().slice(0, 10);
+    // Sin impuestos ni colchón: aquí se mide la previsión, no el objetivo.
     const d = datos({
-      dinero: { precioCasa: 20000, impuestosPct: 0, aportaciones: [{ fecha: haceUnAno, importe: 12000 }] },
+      dinero: {
+        precioCasa: 20000,
+        impuestosPct: 0,
+        colchonPct: 0,
+        aportaciones: [{ fecha: haceUnAno, importe: 12000 }],
+      },
     });
     const p = prevision(d);
     expect(p.falta).toBe(8000);

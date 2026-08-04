@@ -3,11 +3,22 @@ import { nuevaIdea, nuevoElemento } from "./lib.js";
 
 export default function Ideas({ datos, onGuardar, onQuitar, abierto, setAbierto, irAElemento }) {
   const idea = datos.ideas.find((i) => i.id === abierto);
+
+  /* Igual que en máquinas: se guarda sola, así que lo útil es encadenar. */
+  const otra = () => {
+    const i = nuevaIdea();
+    if (idea) i.etiqueta = idea.etiqueta;
+    onGuardar({ ...datos, ideas: [i, ...datos.ideas] });
+    setAbierto(i.id);
+  };
+
   if (idea) {
     return (
       <Ficha
+        key={idea.id}
         datos={datos}
         idea={idea}
+        onOtra={otra}
         onCambio={(n) => onGuardar({ ...datos, ideas: datos.ideas.map((i) => (i.id === n.id ? n : i)) })}
         onBorrar={() => {
           onQuitar(`«${idea.titulo || "Idea sin título"}» borrada`, {
@@ -52,7 +63,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
     <>
       <header className="cab">
         <div className="marca">
-          <em>Las</em>ideas
+          <em>Las</em>Ideas
         </div>
         <div className="sub">
           {datos.ideas.length} {datos.ideas.length === 1 ? "nota" : "notas"}
@@ -103,7 +114,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
   );
 }
 
-function Ficha({ datos, idea, onCambio, onBorrar, onConvertir, onVolver }) {
+function Ficha({ datos, idea, onCambio, onBorrar, onConvertir, onOtra, onVolver }) {
   const [conf, setConf] = useState(false);
   const [convertir, setConvertir] = useState(false);
   const [cat, setCat] = useState(datos.categorias[0]?.id || "");
@@ -201,6 +212,13 @@ function Ficha({ datos, idea, onCambio, onBorrar, onConvertir, onVolver }) {
             Pasar al presupuesto
           </button>
         )}
+      </div>
+
+      <div className="blq">
+        <button className="btn pri" onClick={onOtra}>
+          + Añadir otra idea
+        </button>
+        <div className="ayuda">Esta se guarda sola. No hace falta guardar nada.</div>
       </div>
 
       <div className="blq">

@@ -4,7 +4,7 @@ Presupuesto de la reforma de la casa. React + Vite, sin servidor. Los datos se g
 
 ## Qué hay dentro
 
-**Dinero.** Lo ahorrado frente al objetivo. El objetivo se calcula solo: precio de la casa + impuestos (%) + total de partidas imprescindibles + colchón para imprevistos (%). Se puede forzar a mano dejando el campo del objetivo relleno; para volver al cálculo, se vacía. A partir de las aportaciones registradas saca el ritmo mensual y cuánto queda, en años y meses y con la fecha aproximada de llegada.
+**Dinero.** Lo ahorrado frente al objetivo. El objetivo se calcula solo: precio de la casa + impuestos (%) + total de partidas imprescindibles, y sobre esa suma un colchón para imprevistos (%). El colchón va sobre todo y no solo sobre la obra: calculado solo sobre la obra salía 0 € mientras el presupuesto estuviera vacío, que es justo cuando más margen hace falta. Se puede forzar a mano dejando el campo del objetivo relleno; para volver al cálculo, se vacía. A partir de las aportaciones registradas saca el ritmo mensual y cuánto queda, en años y meses y con la fecha aproximada de llegada.
 
 **Obra.** Categorías que creas tú (Cocina, Patio, Tejado…). Dentro, elementos. Cada elemento tiene fase (imprescindible / extra), estado (idea, decidido, comprado, hecho) y líneas de material: concepto, cantidad, unidad y precio por unidad. Tienda y enlace son opcionales y están plegados.
 
@@ -12,7 +12,9 @@ Presupuesto de la reforma de la casa. React + Vite, sin servidor. Los datos se g
 
 **Ideas.** Notas libres con etiqueta casa o patio. Sin precios. Botón para convertir una idea en elemento del presupuesto; el texto pasa a las notas del elemento.
 
-**Copia.** Exportar e importar un `.json`. Avisa en rojo si hace más de treinta días de la última copia. En el móvil sale el menú de compartir, para guardarla en Archivos o mandársela a quien sea.
+**Copia.** Exportar e importar un `.json`. Empieza explicando qué es y por qué hace falta, porque «Copia» a secas no dice nada: los datos viven solo en el móvil y el fichero es lo único que hay entre ellos y perderlos. Avisa en rojo si hace más de treinta días de la última copia. En el móvil sale el menú de compartir, para guardarla en Archivos o mandársela a quien sea.
+
+Nada tiene botón de guardar: cada cambio se escribe solo. Las fichas de obra, máquinas e ideas llevan al final un botón para encadenar la siguiente sin volver a la lista.
 
 Solo las partidas marcadas como imprescindibles cuentan para el objetivo de ahorro. Los extras se suman aparte.
 

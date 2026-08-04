@@ -35,7 +35,7 @@ export default function Dinero({ datos, onGuardar, onQuitar }) {
     <>
       <header className="cab">
         <div className="marca">
-          <em>El</em>dinero
+          <em>El</em>Dinero
         </div>
         <div className="sub">{pct.toFixed(0)}% del objetivo</div>
       </header>
@@ -77,7 +77,7 @@ export default function Dinero({ datos, onGuardar, onQuitar }) {
           <span className="c">{eur(obj.obra)}</span>
         </div>
         <div className="desg">
-          <span className="n">Colchón para imprevistos ({d.colchonPct || 0}%)</span>
+          <span className="n">Colchón para imprevistos ({d.colchonPct || 0}% de lo anterior)</span>
           <span className="c">{eur(obj.colchon)}</span>
         </div>
         <div className="desg suma">
