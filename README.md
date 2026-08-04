@@ -38,7 +38,9 @@ npm run build
 
 ## Subirlo
 
-Cada push a `main` publica en Vercel. La primera vez hay que enlazar el repositorio: **Add New → Project → Import**, detecta Vite solo, **Deploy**. `vercel.json` ya lleva la configuración de build y las cabeceras de caché.
+Cada push a `main` publica en Vercel. La primera vez hay que enlazar el repositorio: **Add New → Project → Import**, detecta Vite solo, **Deploy**.
+
+`vercel.json` lleva la configuración de build y dos cabeceras de caché que importan. `sw.js` y el manifiesto se revalidan siempre: si se cachean, un despliegue nuevo no llega nunca porque el navegador sigue sirviendo el service worker viejo. Las tipografías, que no cambian de nombre, se guardan un año. (El fichero valida contra el esquema de Vercel y no admite claves de más, así que no se le pueden meter comentarios.)
 
 En cada push y en cada pull request, GitHub Actions pasa los tests y compila (`.github/workflows/ci.yml`).
 
