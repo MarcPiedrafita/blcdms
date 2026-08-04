@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { eur, hoy, uid, num, objetivo, ahorrado, prevision, totales } from "./lib.js";
+import Rueda from "./Rueda.jsx";
 
 export default function Dinero({ datos, onGuardar, onQuitar }) {
   const [importe, setImporte] = useState("");
@@ -40,16 +41,9 @@ export default function Dinero({ datos, onGuardar, onQuitar }) {
         <div className="sub">{pct.toFixed(0)}% del objetivo</div>
       </header>
 
-      <div className="dato">{eur(tengo)}</div>
-      <div className="pie-dato">
+      <Rueda obj={obj} tengo={tengo} pct={pct} />
+      <div className="pie-dato" style={{ textAlign: "center", margin: "0 0 4px" }}>
         de {eur(obj.valor)} · faltan {eur(falta)}
-      </div>
-      <div className="barra">
-        <i style={{ width: `${pct}%` }} />
-      </div>
-      <div className="marcador">
-        <span>0</span>
-        <span>{eur(obj.valor)}</span>
       </div>
 
       {prev && (
@@ -65,19 +59,31 @@ export default function Dinero({ datos, onGuardar, onQuitar }) {
         <div className="tit">De dónde sale el objetivo</div>
 
         <div className="desg">
-          <span className="n">Precio de la casa</span>
+          <span className="n">
+            <i className="punto p-casa" />
+            Precio de la casa
+          </span>
           <span className="c">{eur(obj.casa)}</span>
         </div>
         <div className="desg">
-          <span className="n">Impuestos y gastos ({d.impuestosPct || 0}%)</span>
+          <span className="n">
+            <i className="punto p-impuestos" />
+            Impuestos y gastos ({d.impuestosPct || 0}%)
+          </span>
           <span className="c">{eur(obj.impuestos)}</span>
         </div>
         <div className="desg">
-          <span className="n">Imprescindibles para entrar a vivir</span>
+          <span className="n">
+            <i className="punto p-obra" />
+            Imprescindibles para entrar a vivir
+          </span>
           <span className="c">{eur(obj.obra)}</span>
         </div>
         <div className="desg">
-          <span className="n">Colchón para imprevistos ({d.colchonPct || 0}% de lo anterior)</span>
+          <span className="n">
+            <i className="punto p-colchon" />
+            Colchón para imprevistos ({d.colchonPct || 0}% de lo anterior)
+          </span>
           <span className="c">{eur(obj.colchon)}</span>
         </div>
         <div className="desg suma">
@@ -86,10 +92,21 @@ export default function Dinero({ datos, onGuardar, onQuitar }) {
         </div>
 
         {obj.esManual && (
-          <div className="desg suma" style={{ borderTop: "none", marginTop: 6, paddingTop: 0 }}>
-            <span className="n">Objetivo forzado a mano</span>
-            <span className="c">{eur(obj.valor)}</span>
-          </div>
+          <>
+            {obj.valor > obj.calculado && (
+              <div className="desg">
+                <span className="n">
+                  <i className="punto p-margen" />
+                  Margen puesto a mano
+                </span>
+                <span className="c">{eur(obj.valor - obj.calculado)}</span>
+              </div>
+            )}
+            <div className="desg suma" style={{ borderTop: "none", marginTop: 6, paddingTop: 0 }}>
+              <span className="n">Objetivo forzado a mano</span>
+              <span className="c">{eur(obj.valor)}</span>
+            </div>
+          </>
         )}
 
         <button

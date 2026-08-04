@@ -50,6 +50,18 @@
   --senal: #dcff1f;
   --sobre-senal: #111315;
 
+  /* Variantes de la señal para las partidas del objetivo, de honda a clara en
+     el mismo orden en que se listan.
+     La escala va en ese sentido y no al revés porque el precio de la casa se
+     come tres cuartos del anillo: con el tono más claro encima, esa masa
+     deslumbra y el amarillo vivo acaba en las porciones diminutas. Honda
+     abajo, el bulto queda tranquilo y lo que se ilumina es el colchón, que es
+     precisamente el dinero que todavía es aire. */
+  --senal-casa: #7f9418;
+  --senal-impuestos: #a8c518;
+  --senal-obra: #dcff1f;
+  --senal-colchon: #eeff9c;
+
   --verde: #3ecf94;
   --rojo: #ff6f5e;
   --ambar: #e2ad4e;
@@ -344,45 +356,133 @@ select {
   letter-spacing: -0.01em;
 }
 
-/* Barra de avance con marcas de cinta métrica cada 10 %. */
-.barra {
+/* ---------- rueda del objetivo ---------- */
+
+.rueda {
   position: relative;
-  height: 16px;
-  background: var(--panel);
-  border: 1px solid var(--linea);
-  border-radius: var(--r);
-  overflow: hidden;
+  width: min(280px, 74vw);
+  margin: 4px auto 20px;
 }
 
-.barra > i {
+.rueda svg {
   display: block;
-  height: 100%;
-  background: var(--senal);
-  transition: width 0.6s cubic-bezier(0.2, 0.85, 0.25, 1);
+  width: 100%;
+  height: auto;
+  /* Empezar arriba en vez de a las tres en punto. */
+  transform: rotate(-90deg);
 }
 
-.barra::after {
-  content: "";
+.rueda circle {
+  fill: none;
+}
+
+.rueda .pista {
+  stroke: var(--panel2);
+  stroke-width: 21;
+}
+
+.rueda .trozo {
+  stroke-width: 21;
+  stroke-linecap: butt;
+  transition: stroke-dasharray 0.6s cubic-bezier(0.2, 0.85, 0.25, 1),
+    stroke-dashoffset 0.6s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+.rueda .t-casa {
+  stroke: var(--senal-casa);
+}
+.rueda .t-impuestos {
+  stroke: var(--senal-impuestos);
+}
+.rueda .t-obra {
+  stroke: var(--senal-obra);
+}
+.rueda .t-colchon {
+  stroke: var(--senal-colchon);
+}
+
+/* El margen puesto a mano no es una partida costeada: no va en amarillo. */
+.rueda .t-margen {
+  stroke: #454c53;
+}
+
+/* El avance no va en amarillo: es otra medida, no una quinta partida. */
+.rueda .pista-avance {
+  stroke: var(--linea2);
+  stroke-width: 3;
+}
+
+.rueda .avance {
+  stroke: var(--tinta);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.6s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+.rueda .centro {
   position: absolute;
   inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   pointer-events: none;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--tinta) 0 1px,
-    transparent 1px 10%
-  );
-  opacity: 0.22;
 }
 
-.marcador {
-  display: flex;
-  justify-content: space-between;
+.rueda .centro .cifra {
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  font-variation-settings: "wdth" 78, "opsz" 60;
+  font-variant-numeric: tabular-nums;
+}
+
+.rueda .centro .pct {
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--suave);
-  margin-top: 7px;
+}
+
+/* Punto de color que ata cada partida del desglose a su trozo de la rueda. */
+.punto {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 8px;
+  /* El desglose alinea por línea base: sin el empujón el punto queda alto
+     respecto a la altura de la x. */
+  position: relative;
+  top: 1px;
+}
+
+.p-casa {
+  background: var(--senal-casa);
+}
+.p-impuestos {
+  background: var(--senal-impuestos);
+}
+.p-obra {
+  background: var(--senal-obra);
+}
+.p-colchon {
+  background: var(--senal-colchon);
+}
+
+.p-margen {
+  background: #454c53;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rueda .trozo,
+  .rueda .avance {
+    transition: none;
+  }
 }
 
 /* Bloque de datos tipo cajetín de plano. */

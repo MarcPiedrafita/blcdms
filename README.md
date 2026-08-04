@@ -4,7 +4,7 @@ Presupuesto de la reforma de la casa. React + Vite, sin servidor. Los datos se g
 
 ## Qué hay dentro
 
-**Dinero.** Lo ahorrado frente al objetivo. El objetivo se calcula solo: precio de la casa + impuestos (%) + total de partidas imprescindibles, y sobre esa suma un colchón para imprevistos (%). El colchón va sobre todo y no solo sobre la obra: calculado solo sobre la obra salía 0 € mientras el presupuesto estuviera vacío, que es justo cuando más margen hace falta. Se puede forzar a mano dejando el campo del objetivo relleno; para volver al cálculo, se vacía. A partir de las aportaciones registradas saca el ritmo mensual y cuánto queda, en años y meses y con la fecha aproximada de llegada.
+**Dinero.** Lo ahorrado frente al objetivo, en una rueda que dice dos cosas a la vez: el anillo grueso es de qué se compone el objetivo, una variante del amarillo por partida, y el arco fino de dentro es cuánto llevas ahorrado. El avance va en tinta y no en amarillo para que se lea como otra medida y no como una quinta partida. Si fuerzas el objetivo por encima de lo calculado, ese margen sale como un trozo gris: sin él la rueda sumaría una cifra y el centro otra. El objetivo se calcula solo: precio de la casa + impuestos (%) + total de partidas imprescindibles, y sobre esa suma un colchón para imprevistos (%). El colchón va sobre todo y no solo sobre la obra: calculado solo sobre la obra salía 0 € mientras el presupuesto estuviera vacío, que es justo cuando más margen hace falta. Se puede forzar a mano dejando el campo del objetivo relleno; para volver al cálculo, se vacía. A partir de las aportaciones registradas saca el ritmo mensual y cuánto queda, en años y meses y con la fecha aproximada de llegada.
 
 **Obra.** Categorías que creas tú (Cocina, Patio, Tejado…). Dentro, elementos. Cada elemento tiene fase (imprescindible / extra), estado (idea, decidido, comprado, hecho) y líneas de material: concepto, cantidad, unidad y precio por unidad. Tienda y enlace son opcionales y están plegados.
 
@@ -22,7 +22,9 @@ Todo lo que se borra deja siete segundos para deshacerlo. Cualquier otro cambio 
 
 ## Aspecto
 
-Oscuro siempre, no lo que diga el teléfono. Grafito, con amarillo de alta visibilidad como única señal: botón principal, partidas imprescindibles, avance del ahorro y pestaña activa. Nada más va en amarillo.
+Oscuro siempre, no lo que diga el teléfono. Grafito, con amarillo de alta visibilidad como única señal: botón principal, partidas imprescindibles y pestaña activa. Nada más va en amarillo.
+
+La rueda del objetivo usa cuatro variantes de ese amarillo, de honda a clara en el mismo orden en que se listan las partidas. La escala va en ese sentido y no al revés porque el precio de la casa se come tres cuartos del anillo: con el tono más claro encima, esa masa deslumbra y el amarillo vivo acaba en las porciones diminutas. Honda abajo, el bulto queda tranquilo y lo que se ilumina es el colchón, que es precisamente el dinero que todavía es aire.
 
 Tres tipografías, servidas desde `public/fonts` para que la app abra sin cobertura: **Bricolage Grotesque** para los rótulos y las cifras grandes, **Instrument Sans** para el texto y **IBM Plex Mono** para todo lo que es medida —unidades, cantidades, fechas e importes en columna—.
 
@@ -94,6 +96,7 @@ src/nube.js             Supabase: sesión, bajar y subir
 src/useNube.js          cuándo sincronizar, cosido a React
 src/App.jsx             pestañas y deshacer
 src/Dinero.jsx          ahorros y objetivo
+src/Rueda.jsx           la rueda: composición del objetivo y avance
 src/Presupuesto.jsx     categorías, elementos y líneas
 src/Maquinaria.jsx      alquilar o comprar
 src/Ideas.jsx           notas
