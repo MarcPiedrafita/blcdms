@@ -60,15 +60,21 @@ Es opcional de verdad: si faltan las dos variables de entorno, no se carga ni la
 2. **SQL Editor** → pegar `supabase/schema.sql` entero → *Run*. Crea la tabla, el trigger de la marca de tiempo y la política que impide que nadie lea los datos de otro.
 3. **Authentication → Providers**: dejar *Email* activado y **desactivar «Confirm email»** si quieres entrar con el enlace a la primera.
 4. **Authentication → URL Configuration**: añadir `https://blcdms.vercel.app` a *Site URL* y a *Redirect URLs*. Sin esto el enlace del correo no vuelve a la app.
-5. **Project Settings → API**: copiar *Project URL* y la clave *anon public*.
+5. **Project Settings → API Keys**: copiar el *Project URL* y la **`Publishable key`** (`sb_publishable_…`). En proyectos antiguos esa misma clave aparece como **`anon` `public`**; sirven las dos.
 6. En Vercel, **Settings → Environment Variables**, añadir las dos y volver a desplegar:
 
 ```
 VITE_SUPABASE_URL=https://xxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGci...
+VITE_SUPABASE_ANON_KEY=sb_publishable_...
 ```
 
-La clave `anon` es pública por diseño: va dentro del JavaScript que descarga el navegador. Lo que protege los datos no es esa clave, es la política de la base de datos del paso 2. Sin ese paso, cualquiera podría leerlo todo.
+> **La `Secret key` (`sb_secret_…`, antes `service_role`) no va aquí ni en ninguna otra variable de este proyecto.**
+>
+> Todo lo que empieza por `VITE_` se incrusta en el JavaScript que descarga el navegador: es público, se lee abriendo las herramientas de desarrollo. La clave publicable está pensada para eso. La secreta **se salta la seguridad por filas**, así que en el navegador dejaría la base de datos entera abierta a cualquiera que visite la web, y la política del paso 2 no la frenaría.
+>
+> Si alguna vez llega a desplegarse, hay que darla por quemada: bórrala de las variables, rótala en **Settings → API Keys** y vuelve a desplegar.
+
+Lo que protege los datos no es el secreto de la clave publicable, es la política de la base de datos del paso 2. Sin ese paso, cualquiera podría leerlo todo.
 
 **Si editas en dos sitios a la vez.** Cada aparato guarda cuándo cambió algo por última vez y con qué marca del servidor cuadró. Si los dos lados han cambiado desde entonces, la app no elige: para, lo dice, y te enseña las dos fechas para que decidas. Lo que descartes se pierde, así que la copia en `.json` sigue teniendo sentido aunque esto esté puesto.
 
