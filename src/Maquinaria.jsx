@@ -3,20 +3,31 @@ import { eur, num, nuevaMaquina, costeMaquina, totales } from "./lib.js";
 
 export default function Maquinaria({ datos, onGuardar, onQuitar, abierto, setAbierto }) {
   const maquina = datos.maquinas.find((m) => m.id === abierto);
+
+  /* No hay botón de guardar porque cada cambio se guarda solo. Lo que faltaba
+     era poder encadenar: terminas una y sigues con la siguiente sin volver. */
+  const otra = () => {
+    const m = nuevaMaquina("");
+    onGuardar({ ...datos, maquinas: [...datos.maquinas, m] });
+    setAbierto(m.id);
+  };
+
   if (maquina) {
     return (
       <Ficha
+        key={maquina.id}
         maquina={maquina}
         onCambio={(n) =>
           onGuardar({ ...datos, maquinas: datos.maquinas.map((m) => (m.id === n.id ? n : m)) })
         }
         onBorrar={() => {
-          onQuitar(`«${maquina.nombre}» borrada`, {
+          onQuitar(`«${maquina.nombre || "Máquina sin nombre"}» borrada`, {
             ...datos,
             maquinas: datos.maquinas.filter((m) => m.id !== maquina.id),
           });
           setAbierto(null);
         }}
+        onOtra={otra}
         onVolver={() => setAbierto(null)}
       />
     );
@@ -45,7 +56,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
     <>
       <header className="cab">
         <div className="marca">
-          <em>La</em>maquinaria
+          <em>La</em>Maquinaria
         </div>
         <div className="sub">
           {datos.maquinas.length} {datos.maquinas.length === 1 ? "máquina" : "máquinas"}
@@ -87,7 +98,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
           return (
             <button key={m.id} className="item" onClick={() => setAbierto(m.id)}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="nom">{m.nombre}</div>
+                <div className="nom">{m.nombre || "Sin nombre"}</div>
                 <div className="det">
                   {c.elegido === "alquilar"
                     ? `Alquilar · ${m.dias || 0} días × ${eur(m.precioDia || 0)}`
@@ -130,7 +141,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
   );
 }
 
-function Ficha({ maquina, onCambio, onBorrar, onVolver }) {
+function Ficha({ maquina, onCambio, onBorrar, onOtra, onVolver }) {
   const [conf, setConf] = useState(false);
   const set = (k, v) => onCambio({ ...maquina, [k]: v });
   const c = costeMaquina(maquina);
@@ -147,7 +158,7 @@ function Ficha({ maquina, onCambio, onBorrar, onVolver }) {
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="marca" style={{ fontSize: 24 }}>
-            {maquina.nombre}
+            {maquina.nombre || "Máquina nueva"}
           </div>
           <div className="sub">{eur(c.coste)}</div>
         </div>
@@ -157,7 +168,12 @@ function Ficha({ maquina, onCambio, onBorrar, onVolver }) {
         <label className="lab" htmlFor="maq-nombre">
           Nombre
         </label>
-        <input id="maq-nombre" value={maquina.nombre} onChange={(e) => set("nombre", e.target.value)} />
+        <input
+          id="maq-nombre"
+          autoFocus={!maquina.nombre}
+          value={maquina.nombre}
+          onChange={(e) => set("nombre", e.target.value)}
+        />
       </div>
 
       <div style={{ marginBottom: 13 }}>
@@ -268,6 +284,13 @@ function Ficha({ maquina, onCambio, onBorrar, onVolver }) {
           placeholder="Dónde alquilarla, modelo, si te la deja alguien…"
           aria-label="Notas de la máquina"
         />
+      </div>
+
+      <div className="blq">
+        <button className="btn pri" onClick={onOtra}>
+          + Añadir otra máquina
+        </button>
+        <div className="ayuda">Esta se guarda sola. No hace falta guardar nada.</div>
       </div>
 
       <div className="blq">

@@ -17,9 +17,22 @@ const lineas = (n) => `${n} ${n === 1 ? "línea" : "líneas"}`;
 
 export default function Presupuesto({ datos, onGuardar, onQuitar, abierto, setAbierto }) {
   const elemento = datos.elementos.find((e) => e.id === abierto);
+
+  /* El nuevo cae en la misma categoría que el que estabas mirando, que es
+     casi siempre lo que quieres: acabas la encimera y sigues con el fregadero. */
+  const otro = () => {
+    const el = nuevoElemento(elemento.categoriaId, "");
+    onGuardar({ ...datos, elementos: [...datos.elementos, el] });
+    setAbierto(el.id);
+  };
+
+  /* El key fuerza a remontar al saltar de un elemento a otro: si no, el foco
+     no va al nombre y el estado local (confirmar borrado, paneles de tienda
+     abiertos) se arrastra de una ficha a la siguiente. */
   if (elemento) {
     return (
       <Ficha
+        key={elemento.id}
         datos={datos}
         elemento={elemento}
         onQuitar={onQuitar}
@@ -27,12 +40,13 @@ export default function Presupuesto({ datos, onGuardar, onQuitar, abierto, setAb
           onGuardar({ ...datos, elementos: datos.elementos.map((e) => (e.id === n.id ? n : e)) })
         }
         onBorrar={() => {
-          onQuitar(`«${elemento.nombre}» borrado`, {
+          onQuitar(`«${elemento.nombre || "Elemento sin nombre"}» borrado`, {
             ...datos,
             elementos: datos.elementos.filter((e) => e.id !== elemento.id),
           });
           setAbierto(null);
         }}
+        onOtro={otro}
         onVolver={() => setAbierto(null)}
       />
     );
@@ -84,7 +98,7 @@ function Lista({ datos, onGuardar, onQuitar, setAbierto }) {
     <>
       <header className="cab">
         <div className="marca">
-          <em>El</em>presupuesto
+          <em>El</em>Presupuesto
         </div>
         <div className="sub">
           {datos.elementos.length} elementos · {datos.categorias.length} categorías
@@ -164,7 +178,7 @@ function Lista({ datos, onGuardar, onQuitar, setAbierto }) {
             {els.map((e) => (
               <button key={e.id} className="item" onClick={() => setAbierto(e.id)}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="nom">{e.nombre}</div>
+                  <div className="nom">{e.nombre || "Sin nombre"}</div>
                   <div style={{ marginTop: 7, display: "flex", gap: 5, flexWrap: "wrap" }}>
                     <span className={`chip ${e.fase}`}>{e.fase}</span>
                     <span className={`chip ${e.estado}`}>{e.estado}</span>
@@ -230,7 +244,7 @@ function Lista({ datos, onGuardar, onQuitar, setAbierto }) {
 
 /* ---------- ficha de elemento ---------- */
 
-function Ficha({ datos, elemento, onCambio, onQuitar, onBorrar, onVolver }) {
+function Ficha({ datos, elemento, onCambio, onQuitar, onBorrar, onOtro, onVolver }) {
   const [conf, setConf] = useState(false);
   const [extras, setExtras] = useState({});
   const set = (k, v) => onCambio({ ...elemento, [k]: v });
@@ -260,7 +274,7 @@ function Ficha({ datos, elemento, onCambio, onQuitar, onBorrar, onVolver }) {
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="marca" style={{ fontSize: 24 }}>
-            {elemento.nombre}
+            {elemento.nombre || "Elemento nuevo"}
           </div>
           <div className="sub">{eur2(total)}</div>
         </div>
@@ -270,7 +284,12 @@ function Ficha({ datos, elemento, onCambio, onQuitar, onBorrar, onVolver }) {
         <label className="lab" htmlFor="el-nombre">
           Nombre
         </label>
-        <input id="el-nombre" value={elemento.nombre} onChange={(e) => set("nombre", e.target.value)} />
+        <input
+          id="el-nombre"
+          autoFocus={!elemento.nombre}
+          value={elemento.nombre}
+          onChange={(e) => set("nombre", e.target.value)}
+        />
       </div>
 
       <div style={{ marginBottom: 13 }}>
@@ -429,6 +448,15 @@ function Ficha({ datos, elemento, onCambio, onQuitar, onBorrar, onVolver }) {
           placeholder="Medidas, cómo lo vas a hacer, qué te falta por mirar…"
           aria-label="Notas del elemento"
         />
+      </div>
+
+      <div className="blq">
+        <button className="btn pri" onClick={onOtro}>
+          + Añadir otro elemento
+        </button>
+        <div className="ayuda">
+          Este se guarda solo. No hace falta guardar nada. El nuevo va a la misma categoría.
+        </div>
       </div>
 
       <div className="blq">

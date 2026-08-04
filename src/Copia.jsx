@@ -1,7 +1,9 @@
 import React, { useRef, useState } from "react";
 import { VACIO, eur, totales, objetivo, ahorrado } from "./lib.js";
+import Sincronizacion from "./Sincronizacion.jsx";
+import { hayNube } from "./nube.js";
 
-export default function Copia({ datos, onGuardar }) {
+export default function Copia({ datos, onGuardar, nube }) {
   const input = useRef(null);
   const [msg, setMsg] = useState(null);
   const [pendiente, setPendiente] = useState(null);
@@ -84,35 +86,64 @@ export default function Copia({ datos, onGuardar }) {
     <>
       <header className="cab">
         <div className="marca">
-          <em>La</em>copia
+          <em>La</em>Copia
         </div>
         <div className="sub">
           {datos.elementos.length} elementos · {datos.maquinas.length} máquinas · {datos.ideas.length} ideas
         </div>
       </header>
 
-      <div className="desg">
-        <span className="n">Ahorrado</span>
-        <span className="c">{eur(ahorrado(datos))}</span>
-      </div>
-      <div className="desg">
-        <span className="n">Objetivo</span>
-        <span className="c">{eur(obj.valor)}</span>
-      </div>
-      <div className="desg">
-        <span className="n">Obra imprescindible</span>
-        <span className="c">{eur(t.imprescindible)}</span>
-      </div>
-      <div className="desg">
-        <span className="n">Extras</span>
-        <span className="c">{eur(t.extra)}</span>
-      </div>
+      <div className="tit">Qué es esto</div>
+      {hayNube() ? (
+        <p className="parrafo">
+          Esta app guarda todo <b>dentro de este aparato</b>, y si entras con tu correo ahí abajo, además
+          lo lleva a los demás. Aun así conviene la copia: es un fichero tuyo, que no depende de ninguna
+          cuenta ni de que el servidor siga ahí dentro de cinco años.
+        </p>
+      ) : (
+        <p className="parrafo">
+          Esta app guarda todo <b>dentro de este móvil</b>. No hay cuenta, ni servidor, ni nada tuyo en
+          internet. Nadie más lo ve, pero tampoco hay nada en la nube que te salve si le pasa algo al
+          teléfono.
+        </p>
+      )}
+      <p className="parrafo">
+        Una <b>copia</b> es un fichero con todos tus datos dentro. Le das a exportar, se descarga, y lo
+        guardas donde quieras: Archivos, Drive, o un correo a ti mismo. Si cambias de móvil o borras la app
+        sin querer, cargas ese fichero en «Restaurar» y vuelve todo: aportaciones, presupuesto, máquinas e
+        ideas.
+      </p>
+      <p className="parrafo">Hazla de vez en cuando. Es lo único que hay entre tus datos y perderlos.</p>
+
+      {nube && <Sincronizacion nube={nube} />}
 
       <div className="blq">
         <div className="aviso">
-          Todo esto vive en el navegador de este móvil. Si borras los datos de navegación, cambias de teléfono
-          o usas el modo incógnito, desaparece. En iPhone, además, se borra solo si no abres la app en siete
-          días.
+          <b>Cuándo se pierde lo de este aparato</b>
+          <br />
+          Si borras los datos de navegación, cambias de teléfono o lo abres en modo incógnito. En iPhone,
+          además, se borra solo si no abres la app en siete días.
+          {hayNube() && " Con la sincronización puesta lo recuperas entrando otra vez con tu correo."}
+        </div>
+      </div>
+
+      <div className="blq">
+        <div className="tit">Lo que hay ahora mismo</div>
+        <div className="desg">
+          <span className="n">Ahorrado</span>
+          <span className="c">{eur(ahorrado(datos))}</span>
+        </div>
+        <div className="desg">
+          <span className="n">Objetivo</span>
+          <span className="c">{eur(obj.valor)}</span>
+        </div>
+        <div className="desg">
+          <span className="n">Obra imprescindible</span>
+          <span className="c">{eur(t.imprescindible)}</span>
+        </div>
+        <div className="desg">
+          <span className="n">Extras</span>
+          <span className="c">{eur(t.extra)}</span>
         </div>
       </div>
 
