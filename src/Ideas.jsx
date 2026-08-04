@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { nuevaIdea, nuevoElemento } from "./lib.js";
 
-export default function Ideas({ datos, onGuardar, abierto, setAbierto, irAElemento }) {
+export default function Ideas({ datos, onGuardar, onQuitar, abierto, setAbierto, irAElemento }) {
   const idea = datos.ideas.find((i) => i.id === abierto);
   if (idea) {
     return (
@@ -10,7 +10,10 @@ export default function Ideas({ datos, onGuardar, abierto, setAbierto, irAElemen
         idea={idea}
         onCambio={(n) => onGuardar({ ...datos, ideas: datos.ideas.map((i) => (i.id === n.id ? n : i)) })}
         onBorrar={() => {
-          onGuardar({ ...datos, ideas: datos.ideas.filter((i) => i.id !== idea.id) });
+          onQuitar(`«${idea.titulo || "Idea sin título"}» borrada`, {
+            ...datos,
+            ideas: datos.ideas.filter((i) => i.id !== idea.id),
+          });
           setAbierto(null);
         }}
         onConvertir={(catId) => {
@@ -49,16 +52,18 @@ function Lista({ datos, onGuardar, setAbierto }) {
     <>
       <header className="cab">
         <div className="marca">
-          Las <em>ideas</em>
+          <em>Las</em>ideas
         </div>
-        <div className="sub">{datos.ideas.length} notas</div>
+        <div className="sub">
+          {datos.ideas.length} {datos.ideas.length === 1 ? "nota" : "notas"}
+        </div>
       </header>
 
-      <button className="btn" style={{ marginBottom: 16 }} onClick={crear}>
+      <button className="btn pri" style={{ marginBottom: 18 }} onClick={crear}>
         + Nueva idea
       </button>
 
-      <div className="seg" style={{ marginBottom: 6 }}>
+      <div className="seg" style={{ marginBottom: 24 }}>
         {[
           ["todo", "Todo"],
           ["casa", "Casa"],
@@ -87,7 +92,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
                   {i.texto.length > 120 ? "…" : ""}
                 </div>
               )}
-              <div style={{ marginTop: 6 }}>
+              <div style={{ marginTop: 7 }}>
                 <span className={`chip ${i.etiqueta}`}>{i.etiqueta}</span>
               </div>
             </div>
@@ -107,19 +112,22 @@ function Ficha({ datos, idea, onCambio, onBorrar, onConvertir, onVolver }) {
   return (
     <>
       <header className="cab" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <button className="volver" onClick={onVolver}>
+        <button className="volver" aria-label="Volver a la lista" onClick={onVolver}>
           ←
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="marca" style={{ fontSize: 21 }}>
+          <div className="marca" style={{ fontSize: 24 }}>
             {idea.titulo || "Nueva idea"}
           </div>
         </div>
       </header>
 
-      <div style={{ marginBottom: 12 }}>
-        <label className="lab">Título</label>
+      <div style={{ marginBottom: 13 }}>
+        <label className="lab" htmlFor="idea-titulo">
+          Título
+        </label>
         <input
+          id="idea-titulo"
           autoFocus={!idea.titulo}
           value={idea.titulo}
           onChange={(e) => set("titulo", e.target.value)}
@@ -127,8 +135,8 @@ function Ficha({ datos, idea, onCambio, onBorrar, onConvertir, onVolver }) {
         />
       </div>
 
-      <div style={{ marginBottom: 12 }}>
-        <label className="lab">Dónde</label>
+      <div style={{ marginBottom: 13 }}>
+        <span className="lab">Dónde</span>
         <div className="seg">
           {["casa", "patio"].map((t) => (
             <button key={t} className={idea.etiqueta === t ? "on" : ""} onClick={() => set("etiqueta", t)}>
@@ -139,8 +147,11 @@ function Ficha({ datos, idea, onCambio, onBorrar, onConvertir, onVolver }) {
       </div>
 
       <div>
-        <label className="lab">La idea</label>
+        <label className="lab" htmlFor="idea-texto">
+          La idea
+        </label>
         <textarea
+          id="idea-texto"
           rows={12}
           value={idea.texto}
           onChange={(e) => set("texto", e.target.value)}
@@ -151,14 +162,21 @@ function Ficha({ datos, idea, onCambio, onBorrar, onConvertir, onVolver }) {
       <div className="blq">
         <div className="tit">Cuando deje de ser una idea</div>
         {datos.categorias.length === 0 ? (
-          <div style={{ fontSize: 13, color: "var(--piedra)", lineHeight: 1.55 }}>
+          <div className="ayuda" style={{ marginTop: 0 }}>
             Crea antes alguna categoría en el presupuesto y podrás convertir esta idea en un elemento con sus
             materiales.
           </div>
         ) : convertir ? (
           <>
-            <label className="lab">En qué categoría</label>
-            <select value={cat} onChange={(e) => setCat(e.target.value)} style={{ marginBottom: 11 }}>
+            <label className="lab" htmlFor="idea-cat">
+              En qué categoría
+            </label>
+            <select
+              id="idea-cat"
+              value={cat}
+              onChange={(e) => setCat(e.target.value)}
+              style={{ marginBottom: 12 }}
+            >
               {datos.categorias.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nombre}
@@ -166,14 +184,14 @@ function Ficha({ datos, idea, onCambio, onBorrar, onConvertir, onVolver }) {
               ))}
             </select>
             <div className="fila">
-              <button className="btn" onClick={() => onConvertir(cat)}>
+              <button className="btn pri" onClick={() => onConvertir(cat)}>
                 Convertir
               </button>
               <button className="btn sec" onClick={() => setConvertir(false)}>
                 Cancelar
               </button>
             </div>
-            <div style={{ fontSize: 12, color: "var(--piedra)", marginTop: 10, lineHeight: 1.5 }}>
+            <div className="ayuda">
               La nota pasa a ser un elemento del presupuesto y desaparece de aquí. El texto se guarda en sus
               notas.
             </div>

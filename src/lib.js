@@ -51,11 +51,15 @@ export function escribir(d) {
 export const uid = () => Math.random().toString(36).slice(2, 10);
 export const hoy = () => new Date().toISOString().slice(0, 10);
 
+/* `useGrouping: "always"` para que 5800 salga «5.800 €» y no «5800 €».
+   Sin esto el español agrupa a partir de cinco cifras y las columnas de
+   dinero quedan con unos importes puntuados y otros no. */
 export const eur = (n) =>
   new Intl.NumberFormat("es-ES", {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: 0,
+    useGrouping: "always",
   }).format(Number(n) || 0);
 
 export const eur2 = (n) =>
@@ -64,6 +68,7 @@ export const eur2 = (n) =>
     currency: "EUR",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+    useGrouping: "always",
   }).format(Number(n) || 0);
 
 export const num = (v) => (v === "" || v == null ? null : Number(v));
@@ -185,4 +190,39 @@ export function ritmoMensual(d) {
   const meses = Math.max(1, (Date.now() - primera) / (1000 * 60 * 60 * 24 * 30.4));
   const suma = aps.reduce((s, a) => s + (Number(a.importe) || 0), 0);
   return suma / meses;
+}
+
+/** «49 meses» no dice nada. Esto lo pasa a años y meses, y da la fecha. */
+export function plazo(meses, desde = new Date()) {
+  if (meses == null || !isFinite(meses) || meses <= 0) return null;
+
+  const total = Math.ceil(meses);
+  const anos = Math.floor(total / 12);
+  const resto = total % 12;
+
+  const trozo = (n, sing, plur) => `${n} ${n === 1 ? sing : plur}`;
+  let texto;
+  if (anos === 0) texto = trozo(resto, "mes", "meses");
+  else if (resto === 0) texto = trozo(anos, "año", "años");
+  else texto = `${trozo(anos, "año", "años")} y ${trozo(resto, "mes", "meses")}`;
+
+  const fecha = new Date(desde.getTime());
+  fecha.setDate(1); // evita que un 31 se desborde al mes siguiente
+  fecha.setMonth(fecha.getMonth() + total);
+
+  return {
+    meses: total,
+    texto,
+    fecha,
+    cuando: fecha.toLocaleDateString("es-ES", { month: "long", year: "numeric" }),
+  };
+}
+
+/** Cuánto falta para el objetivo al ritmo actual. null si no se puede saber. */
+export function prevision(d, desde = new Date()) {
+  const falta = Math.max(0, objetivo(d).valor - ahorrado(d));
+  if (falta <= 0) return null;
+  const ritmo = ritmoMensual(d);
+  if (!ritmo || ritmo <= 0) return null;
+  return { ...plazo(falta / ritmo, desde), ritmo, falta };
 }
