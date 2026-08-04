@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { eur, num, nuevaMaquina, costeMaquina, totales } from "./lib.js";
 
-export default function Maquinaria({ datos, onGuardar, abierto, setAbierto }) {
+export default function Maquinaria({ datos, onGuardar, onQuitar, abierto, setAbierto }) {
   const maquina = datos.maquinas.find((m) => m.id === abierto);
   if (maquina) {
     return (
@@ -11,7 +11,10 @@ export default function Maquinaria({ datos, onGuardar, abierto, setAbierto }) {
           onGuardar({ ...datos, maquinas: datos.maquinas.map((m) => (m.id === n.id ? n : m)) })
         }
         onBorrar={() => {
-          onGuardar({ ...datos, maquinas: datos.maquinas.filter((m) => m.id !== maquina.id) });
+          onQuitar(`«${maquina.nombre}» borrada`, {
+            ...datos,
+            maquinas: datos.maquinas.filter((m) => m.id !== maquina.id),
+          });
           setAbierto(null);
         }}
         onVolver={() => setAbierto(null)}
@@ -42,12 +45,14 @@ function Lista({ datos, onGuardar, setAbierto }) {
     <>
       <header className="cab">
         <div className="marca">
-          La <em>maquinaria</em>
+          <em>La</em>maquinaria
         </div>
-        <div className="sub">{datos.maquinas.length} máquinas</div>
+        <div className="sub">
+          {datos.maquinas.length} {datos.maquinas.length === 1 ? "máquina" : "máquinas"}
+        </div>
       </header>
 
-      <div className="duo" style={{ marginBottom: 16 }}>
+      <div className="duo" style={{ marginBottom: 18 }}>
         <div className="imp">
           <div className="k">Imprescindible</div>
           <div className="v">{eur(t.maquinaria.imprescindible)}</div>
@@ -58,7 +63,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
         </div>
       </div>
 
-      <div className="seg" style={{ marginBottom: 6 }}>
+      <div className="seg" style={{ marginBottom: 24 }}>
         {[
           ["todo", "Todo"],
           ["imprescindible", "Imprescindibles"],
@@ -91,7 +96,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
                     : "Sin precios"}
                   {m.decision !== "auto" ? " · decidido por ti" : ""}
                 </div>
-                <div style={{ marginTop: 6 }}>
+                <div style={{ marginTop: 7 }}>
                   <span className={`chip ${m.fase}`}>{m.fase}</span>
                 </div>
               </div>
@@ -116,7 +121,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
             </button>
           </div>
         ) : (
-          <button className="btn" onClick={() => setForm(true)}>
+          <button className="btn pri" onClick={() => setForm(true)}>
             + Añadir máquina
           </button>
         )}
@@ -131,28 +136,32 @@ function Ficha({ maquina, onCambio, onBorrar, onVolver }) {
   const c = costeMaquina(maquina);
   const hayComparativa = c.alquiler != null && c.compra != null;
   const diferencia = hayComparativa ? Math.abs(c.alquiler - c.compra) : 0;
+  const umbral =
+    hayComparativa && maquina.precioDia > 0 ? Math.ceil(maquina.precioCompra / maquina.precioDia) : null;
 
   return (
     <>
       <header className="cab" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <button className="volver" onClick={onVolver}>
+        <button className="volver" aria-label="Volver a la lista" onClick={onVolver}>
           ←
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="marca" style={{ fontSize: 21 }}>
+          <div className="marca" style={{ fontSize: 24 }}>
             {maquina.nombre}
           </div>
           <div className="sub">{eur(c.coste)}</div>
         </div>
       </header>
 
-      <div style={{ marginBottom: 12 }}>
-        <label className="lab">Nombre</label>
-        <input value={maquina.nombre} onChange={(e) => set("nombre", e.target.value)} />
+      <div style={{ marginBottom: 13 }}>
+        <label className="lab" htmlFor="maq-nombre">
+          Nombre
+        </label>
+        <input id="maq-nombre" value={maquina.nombre} onChange={(e) => set("nombre", e.target.value)} />
       </div>
 
-      <div style={{ marginBottom: 12 }}>
-        <label className="lab">Fase</label>
+      <div style={{ marginBottom: 13 }}>
+        <span className="lab">Fase</span>
         <div className="seg">
           {["imprescindible", "extra"].map((f) => (
             <button key={f} className={maquina.fase === f ? "on" : ""} onClick={() => set("fase", f)}>
@@ -166,8 +175,11 @@ function Ficha({ maquina, onCambio, onBorrar, onVolver }) {
         <div className="tit">Alquilar</div>
         <div className="fila">
           <div>
-            <label className="lab">Días que la necesito</label>
+            <label className="lab" htmlFor="maq-dias">
+              Días que la necesito
+            </label>
             <input
+              id="maq-dias"
               inputMode="decimal"
               value={maquina.dias ?? ""}
               onChange={(e) => set("dias", num(e.target.value))}
@@ -175,8 +187,11 @@ function Ficha({ maquina, onCambio, onBorrar, onVolver }) {
             />
           </div>
           <div>
-            <label className="lab">Precio por día €</label>
+            <label className="lab" htmlFor="maq-precio-dia">
+              Precio por día €
+            </label>
             <input
+              id="maq-precio-dia"
               inputMode="decimal"
               value={maquina.precioDia ?? ""}
               onChange={(e) => set("precioDia", num(e.target.value))}
@@ -185,14 +200,20 @@ function Ficha({ maquina, onCambio, onBorrar, onVolver }) {
           </div>
         </div>
         {c.alquiler != null && (
-          <div style={{ marginTop: 10, fontWeight: 700, fontSize: 15 }}>{eur(c.alquiler)}</div>
+          <div className="desg suma" style={{ marginTop: 14 }}>
+            <span className="n">Sale por</span>
+            <span className="c">{eur(c.alquiler)}</span>
+          </div>
         )}
       </div>
 
       <div className="blq">
         <div className="tit">Comprar</div>
-        <label className="lab">Precio de compra €</label>
+        <label className="lab" htmlFor="maq-compra">
+          Precio de compra €
+        </label>
         <input
+          id="maq-compra"
           inputMode="decimal"
           value={maquina.precioCompra ?? ""}
           onChange={(e) => set("precioCompra", num(e.target.value))}
@@ -203,35 +224,34 @@ function Ficha({ maquina, onCambio, onBorrar, onVolver }) {
       <div className="blq">
         <div className="tit">Veredicto</div>
         {!hayComparativa ? (
-          <div style={{ fontSize: 13, color: "var(--piedra)", lineHeight: 1.55 }}>
+          <div className="ayuda" style={{ marginTop: 0 }}>
             Necesito los días, el precio por día y el precio de compra para compararlos.
           </div>
         ) : (
-          <div className="aviso" style={{ borderLeftColor: "var(--musgo)" }}>
-            <b style={{ color: "var(--tinta)" }}>
-              {c.alquiler <= c.compra ? "Sale mejor alquilar" : "Sale mejor comprar"}
-            </b>
+          <div className="aviso">
+            <b>{c.alquiler <= c.compra ? "Sale mejor alquilar" : "Sale mejor comprar"}</b>
             <br />
             Alquilar {eur(c.alquiler)} · comprar {eur(c.compra)}. Diferencia de {eur(diferencia)}.
-            {c.alquiler > c.compra && maquina.precioDia > 0 && (
-              <>
-                {" "}
-                Comprándola te sale a cuenta a partir de{" "}
-                {Math.ceil(maquina.precioCompra / maquina.precioDia)} días de uso.
-              </>
-            )}
+            {umbral != null &&
+              (c.alquiler > c.compra
+                ? ` Comprándola te sale a cuenta a partir de ${umbral} días de uso.`
+                : ` Si al final la necesitas más de ${umbral} días, compensa comprarla.`)}
           </div>
         )}
 
-        <div style={{ marginTop: 14 }}>
-          <label className="lab">Qué cuento en el presupuesto</label>
+        <div style={{ marginTop: 16 }}>
+          <span className="lab">Qué cuento en el presupuesto</span>
           <div className="seg">
             {[
               ["auto", "Lo más barato"],
               ["alquilar", "Alquilar"],
               ["comprar", "Comprar"],
             ].map(([k, l]) => (
-              <button key={k} className={maquina.decision === k ? "on" : ""} onClick={() => set("decision", k)}>
+              <button
+                key={k}
+                className={maquina.decision === k ? "on" : ""}
+                onClick={() => set("decision", k)}
+              >
                 {l}
               </button>
             ))}
@@ -246,6 +266,7 @@ function Ficha({ maquina, onCambio, onBorrar, onVolver }) {
           value={maquina.notas}
           onChange={(e) => set("notas", e.target.value)}
           placeholder="Dónde alquilarla, modelo, si te la deja alguien…"
+          aria-label="Notas de la máquina"
         />
       </div>
 

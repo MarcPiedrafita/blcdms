@@ -3,7 +3,6 @@ import {
   eur,
   eur2,
   num,
-  uid,
   UNIDADES,
   ESTADOS,
   nuevaCategoria,
@@ -14,33 +13,40 @@ import {
   totales,
 } from "./lib.js";
 
-export default function Presupuesto({ datos, onGuardar, abierto, setAbierto }) {
+const lineas = (n) => `${n} ${n === 1 ? "línea" : "líneas"}`;
+
+export default function Presupuesto({ datos, onGuardar, onQuitar, abierto, setAbierto }) {
   const elemento = datos.elementos.find((e) => e.id === abierto);
   if (elemento) {
     return (
       <Ficha
         datos={datos}
         elemento={elemento}
+        onQuitar={onQuitar}
         onCambio={(n) =>
           onGuardar({ ...datos, elementos: datos.elementos.map((e) => (e.id === n.id ? n : e)) })
         }
         onBorrar={() => {
-          onGuardar({ ...datos, elementos: datos.elementos.filter((e) => e.id !== elemento.id) });
+          onQuitar(`«${elemento.nombre}» borrado`, {
+            ...datos,
+            elementos: datos.elementos.filter((e) => e.id !== elemento.id),
+          });
           setAbierto(null);
         }}
         onVolver={() => setAbierto(null)}
       />
     );
   }
-  return <Lista datos={datos} onGuardar={onGuardar} setAbierto={setAbierto} />;
+  return <Lista datos={datos} onGuardar={onGuardar} onQuitar={onQuitar} setAbierto={setAbierto} />;
 }
 
 /* ---------- lista por categorías ---------- */
 
-function Lista({ datos, onGuardar, setAbierto }) {
+function Lista({ datos, onGuardar, onQuitar, setAbierto }) {
   const [nuevaCat, setNuevaCat] = useState("");
   const [formCat, setFormCat] = useState(false);
   const [nuevoEnCat, setNuevoEnCat] = useState(null);
+  const [borrandoCat, setBorrandoCat] = useState(null);
   const [nombreEl, setNombreEl] = useState("");
   const [filtro, setFiltro] = useState("todo");
 
@@ -63,9 +69,8 @@ function Lista({ datos, onGuardar, setAbierto }) {
   };
 
   const borrarCat = (cat) => {
-    const n = datos.elementos.filter((e) => e.categoriaId === cat.id).length;
-    if (!confirm(`Borrar "${cat.nombre}" y sus ${n} elementos?`)) return;
-    onGuardar({
+    setBorrandoCat(null);
+    onQuitar(`«${cat.nombre}» borrada`, {
       ...datos,
       categorias: datos.categorias.filter((c) => c.id !== cat.id),
       elementos: datos.elementos.filter((e) => e.categoriaId !== cat.id),
@@ -79,14 +84,14 @@ function Lista({ datos, onGuardar, setAbierto }) {
     <>
       <header className="cab">
         <div className="marca">
-          El <em>presupuesto</em>
+          <em>El</em>presupuesto
         </div>
         <div className="sub">
           {datos.elementos.length} elementos · {datos.categorias.length} categorías
         </div>
       </header>
 
-      <div className="duo" style={{ marginBottom: 16 }}>
+      <div className="duo" style={{ marginBottom: 18 }}>
         <div className="imp">
           <div className="k">Imprescindible</div>
           <div className="v">{eur(t.obra.imprescindible)}</div>
@@ -97,7 +102,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
         </div>
       </div>
 
-      <div className="seg" style={{ marginBottom: 6 }}>
+      <div className="seg">
         {[
           ["todo", "Todo"],
           ["imprescindible", "Imprescindibles"],
@@ -110,7 +115,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
       </div>
 
       {datos.categorias.length === 0 && (
-        <div className="vacio">
+        <div className="vacio" style={{ marginTop: 24 }}>
           <b>Empieza por una categoría</b>
           Cocina, Baño, Tejado, Patio… Dentro de cada una irás metiendo elementos con sus materiales.
         </div>
@@ -118,6 +123,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
 
       {datos.categorias.map((cat) => {
         const els = visibles(cat.id);
+        const cuantos = datos.elementos.filter((e) => e.categoriaId === cat.id).length;
         const suma = datos.elementos
           .filter((e) => e.categoriaId === cat.id)
           .reduce((s, e) => s + totalElemento(e), 0);
@@ -126,19 +132,43 @@ function Lista({ datos, onGuardar, setAbierto }) {
             <div className="catcab">
               <span className="n">{cat.nombre}</span>
               <span className="c">{eur(suma)}</span>
-              <button className="equis" onClick={() => borrarCat(cat)}>
+              <button
+                className="equis"
+                aria-label={`Borrar la categoría ${cat.nombre}`}
+                onClick={() => setBorrandoCat(borrandoCat === cat.id ? null : cat.id)}
+              >
                 ×
               </button>
             </div>
+
+            {borrandoCat === cat.id && (
+              <div className="aviso" style={{ margin: "12px 0" }}>
+                <b>¿Borrar «{cat.nombre}»?</b>
+                <br />
+                Se van con ella {cuantos === 1 ? "su elemento" : `sus ${cuantos} elementos`}.
+                <div className="fila" style={{ marginTop: 12 }}>
+                  <button className="btn peli mini" style={{ width: "100%" }} onClick={() => borrarCat(cat)}>
+                    Sí, borrar
+                  </button>
+                  <button
+                    className="btn sec mini"
+                    style={{ width: "100%" }}
+                    onClick={() => setBorrandoCat(null)}
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            )}
 
             {els.map((e) => (
               <button key={e.id} className="item" onClick={() => setAbierto(e.id)}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="nom">{e.nombre}</div>
-                  <div style={{ marginTop: 6, display: "flex", gap: 5, flexWrap: "wrap" }}>
+                  <div style={{ marginTop: 7, display: "flex", gap: 5, flexWrap: "wrap" }}>
                     <span className={`chip ${e.fase}`}>{e.fase}</span>
                     <span className={`chip ${e.estado}`}>{e.estado}</span>
-                    <span className="chip">{(e.lineas || []).length} líneas</span>
+                    <span className="chip">{lineas((e.lineas || []).length)}</span>
                   </div>
                 </div>
                 <div className="imp">{eur(totalElemento(e))}</div>
@@ -146,7 +176,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
             ))}
 
             {nuevoEnCat === cat.id ? (
-              <div style={{ display: "flex", gap: 8, padding: "12px 0" }}>
+              <div style={{ display: "flex", gap: 8, padding: "14px 0" }}>
                 <input
                   autoFocus
                   value={nombreEl}
@@ -161,7 +191,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
             ) : (
               <button
                 className="link"
-                style={{ display: "inline-block", margin: "12px 0 4px" }}
+                style={{ display: "inline-block", margin: "14px 0 4px" }}
                 onClick={() => {
                   setNombreEl("");
                   setNuevoEnCat(cat.id);
@@ -200,42 +230,58 @@ function Lista({ datos, onGuardar, setAbierto }) {
 
 /* ---------- ficha de elemento ---------- */
 
-function Ficha({ datos, elemento, onCambio, onBorrar, onVolver }) {
+function Ficha({ datos, elemento, onCambio, onQuitar, onBorrar, onVolver }) {
   const [conf, setConf] = useState(false);
   const [extras, setExtras] = useState({});
   const set = (k, v) => onCambio({ ...elemento, [k]: v });
-  const lineas = elemento.lineas || [];
+  const ls = elemento.lineas || [];
 
   const setLinea = (id, k, v) =>
     set(
       "lineas",
-      lineas.map((l) => (l.id === id ? { ...l, [k]: v } : l))
+      ls.map((l) => (l.id === id ? { ...l, [k]: v } : l))
     );
+
+  const quitarLinea = (l) =>
+    onQuitar(`«${l.concepto || "Línea sin concepto"}» borrada`, {
+      ...datos,
+      elementos: datos.elementos.map((e) =>
+        e.id === elemento.id ? { ...elemento, lineas: ls.filter((x) => x.id !== l.id) } : e
+      ),
+    });
 
   const total = totalElemento(elemento);
 
   return (
     <>
       <header className="cab" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <button className="volver" onClick={onVolver}>
+        <button className="volver" aria-label="Volver a la lista" onClick={onVolver}>
           ←
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="marca" style={{ fontSize: 21 }}>
+          <div className="marca" style={{ fontSize: 24 }}>
             {elemento.nombre}
           </div>
           <div className="sub">{eur2(total)}</div>
         </div>
       </header>
 
-      <div style={{ marginBottom: 12 }}>
-        <label className="lab">Nombre</label>
-        <input value={elemento.nombre} onChange={(e) => set("nombre", e.target.value)} />
+      <div style={{ marginBottom: 13 }}>
+        <label className="lab" htmlFor="el-nombre">
+          Nombre
+        </label>
+        <input id="el-nombre" value={elemento.nombre} onChange={(e) => set("nombre", e.target.value)} />
       </div>
 
-      <div style={{ marginBottom: 12 }}>
-        <label className="lab">Categoría</label>
-        <select value={elemento.categoriaId} onChange={(e) => set("categoriaId", e.target.value)}>
+      <div style={{ marginBottom: 13 }}>
+        <label className="lab" htmlFor="el-cat">
+          Categoría
+        </label>
+        <select
+          id="el-cat"
+          value={elemento.categoriaId}
+          onChange={(e) => set("categoriaId", e.target.value)}
+        >
           {datos.categorias.map((c) => (
             <option key={c.id} value={c.id}>
               {c.nombre}
@@ -244,8 +290,8 @@ function Ficha({ datos, elemento, onCambio, onBorrar, onVolver }) {
         </select>
       </div>
 
-      <div style={{ marginBottom: 12 }}>
-        <label className="lab">Fase</label>
+      <div style={{ marginBottom: 13 }}>
+        <span className="lab">Fase</span>
         <div className="seg">
           {["imprescindible", "extra"].map((f) => (
             <button key={f} className={elemento.fase === f ? "on" : ""} onClick={() => set("fase", f)}>
@@ -256,7 +302,7 @@ function Ficha({ datos, elemento, onCambio, onBorrar, onVolver }) {
       </div>
 
       <div>
-        <label className="lab">Estado</label>
+        <span className="lab">Estado</span>
         <div className="seg">
           {ESTADOS.map((s) => (
             <button key={s} className={elemento.estado === s ? "on" : ""} onClick={() => set("estado", s)}>
@@ -269,28 +315,25 @@ function Ficha({ datos, elemento, onCambio, onBorrar, onVolver }) {
       <div className="blq">
         <div className="tit">Materiales</div>
 
-        {lineas.length === 0 && (
-          <div style={{ fontSize: 13, color: "var(--piedra)", marginBottom: 12, lineHeight: 1.5 }}>
+        {ls.length === 0 && (
+          <div className="ayuda" style={{ margin: "0 0 14px" }}>
             Todavía no hay nada. Añade ladrillos, sacos de mortero, tornillos… lo que haga falta.
           </div>
         )}
 
-        {lineas.map((l) => (
+        {ls.map((l) => (
           <div className="ln" key={l.id}>
             <div className="top">
               <input
                 value={l.concepto}
                 onChange={(e) => setLinea(l.id, "concepto", e.target.value)}
                 placeholder="Ladrillo refractario"
+                aria-label="Concepto"
               />
               <button
                 className="equis"
-                onClick={() =>
-                  set(
-                    "lineas",
-                    lineas.filter((x) => x.id !== l.id)
-                  )
-                }
+                aria-label={`Borrar la línea ${l.concepto || "sin concepto"}`}
+                onClick={() => quitarLinea(l)}
               >
                 ×
               </button>
@@ -303,6 +346,7 @@ function Ficha({ datos, elemento, onCambio, onBorrar, onVolver }) {
                 value={l.cantidad ?? ""}
                 onChange={(e) => setLinea(l.id, "cantidad", num(e.target.value))}
                 placeholder="1"
+                aria-label="Cantidad"
               />
               <input
                 className="und"
@@ -310,6 +354,7 @@ function Ficha({ datos, elemento, onCambio, onBorrar, onVolver }) {
                 value={l.unidad}
                 onChange={(e) => setLinea(l.id, "unidad", e.target.value)}
                 placeholder="ud"
+                aria-label="Unidad"
               />
               <input
                 className="pre"
@@ -317,31 +362,31 @@ function Ficha({ datos, elemento, onCambio, onBorrar, onVolver }) {
                 value={l.precio ?? ""}
                 onChange={(e) => setLinea(l.id, "precio", num(e.target.value))}
                 placeholder="€ / unidad"
+                aria-label="Precio por unidad"
               />
             </div>
 
             <div className="pie">
-              <span className="sub">{eur2(totalLinea(l))}</span>
-              <button
-                className="link"
-                onClick={() => setExtras({ ...extras, [l.id]: !extras[l.id] })}
-              >
+              <span className="tot">{eur2(totalLinea(l))}</span>
+              <button className="link" onClick={() => setExtras({ ...extras, [l.id]: !extras[l.id] })}>
                 {extras[l.id] || l.tienda || l.enlace ? "Tienda" : "+ Tienda"}
               </button>
             </div>
 
             {(extras[l.id] || l.tienda || l.enlace) && (
-              <div style={{ marginTop: 9 }}>
+              <div style={{ marginTop: 10 }}>
                 <input
                   value={l.tienda}
                   onChange={(e) => setLinea(l.id, "tienda", e.target.value)}
                   placeholder="Dónde lo viste"
+                  aria-label="Tienda"
                   style={{ marginBottom: 7 }}
                 />
                 <input
                   value={l.enlace}
                   onChange={(e) => setLinea(l.id, "enlace", e.target.value)}
                   placeholder="https://…"
+                  aria-label="Enlace"
                 />
                 {l.enlace && (
                   <a
@@ -349,7 +394,7 @@ function Ficha({ datos, elemento, onCambio, onBorrar, onVolver }) {
                     href={l.enlace}
                     target="_blank"
                     rel="noreferrer"
-                    style={{ display: "inline-block", marginTop: 8 }}
+                    style={{ display: "inline-block", marginTop: 10 }}
                   >
                     Abrir
                   </a>
@@ -365,11 +410,11 @@ function Ficha({ datos, elemento, onCambio, onBorrar, onVolver }) {
           ))}
         </datalist>
 
-        <button className="btn sec" onClick={() => set("lineas", [...lineas, nuevaLinea()])}>
+        <button className="btn sec" onClick={() => set("lineas", [...ls, nuevaLinea()])}>
           + Añadir línea
         </button>
 
-        <div className="desg suma" style={{ marginTop: 18 }}>
+        <div className="desg suma" style={{ marginTop: 20 }}>
           <span className="n">Total del elemento</span>
           <span className="c">{eur2(total)}</span>
         </div>
@@ -382,6 +427,7 @@ function Ficha({ datos, elemento, onCambio, onBorrar, onVolver }) {
           value={elemento.notas}
           onChange={(e) => set("notas", e.target.value)}
           placeholder="Medidas, cómo lo vas a hacer, qué te falta por mirar…"
+          aria-label="Notas del elemento"
         />
       </div>
 
