@@ -14,7 +14,7 @@ const ordenar = (a, b) =>
   (ORDEN[a.urgencia] ?? 9) - (ORDEN[b.urgencia] ?? 9) ||
   b.creado - a.creado;
 
-export default function Tramites({ datos, onGuardar, onQuitar, abierto, setAbierto }) {
+export default function Tramites({ datos, onGuardar, onQuitar, abierto, setAbierto, irAAyuda, volverA }) {
   const tramite = datos.tramites.find((t) => t.id === abierto);
 
   const otro = () => {
@@ -32,6 +32,8 @@ export default function Tramites({ datos, onGuardar, onQuitar, abierto, setAbier
       <Ficha
         key={tramite.id}
         tramite={tramite}
+        ayuda={datos.ayudas.find((a) => a.id === tramite.ayudaId)}
+        irAAyuda={irAAyuda}
         onOtro={otro}
         onCambio={(n) =>
           onGuardar({ ...datos, tramites: datos.tramites.map((t) => (t.id === n.id ? n : t)) })
@@ -43,7 +45,7 @@ export default function Tramites({ datos, onGuardar, onQuitar, abierto, setAbier
           });
           setAbierto(null);
         }}
-        onVolver={() => setAbierto(null)}
+        onVolver={() => (volverA ? irAAyuda(volverA) : setAbierto(null))}
       />
     );
   }
@@ -67,23 +69,8 @@ function Lista({ datos, onGuardar, setAbierto }) {
     });
 
   const lista = [...datos.tramites].filter((t) => filtro === "todo" || t.tipo === filtro).sort(ordenar);
-  const pendientes = datos.tramites.filter((t) => !t.hecho).length;
-  const frenan = datos.tramites.filter((t) => !t.hecho && t.urgencia === "antelacion").length;
-  const cuestan = totales(datos).tramites;
-
   return (
     <>
-      <header className="cab">
-        <div className="marca">
-          <em>Los</em>Trámites
-        </div>
-        <div className="sub">
-          {pendientes} {pendientes === 1 ? "pendiente" : "pendientes"}
-          {frenan > 0 && ` · ${frenan} con antelación`}
-          {cuestan > 0 && ` · ${eur(cuestan)}`}
-        </div>
-      </header>
-
       <button className="btn pri" style={{ marginBottom: 18 }} onClick={crear}>
         + Nuevo trámite
       </button>
@@ -135,7 +122,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
   );
 }
 
-function Ficha({ tramite, onCambio, onBorrar, onOtro, onVolver }) {
+function Ficha({ tramite, ayuda, irAAyuda, onCambio, onBorrar, onOtro, onVolver }) {
   const [conf, setConf] = useState(false);
   const set = (k, v) => onCambio({ ...tramite, [k]: v });
   const Ico = ICONO[tramite.tipo] || IcoSello;
@@ -153,6 +140,13 @@ function Ficha({ tramite, onCambio, onBorrar, onOtro, onVolver }) {
           </div>
         </div>
       </header>
+
+      {ayuda && (
+        <button className="colgado" onClick={() => irAAyuda(ayuda.id)}>
+          <span className="lab" style={{ marginBottom: 3 }}>Es para la ayuda</span>
+          {ayuda.nombre || "Ayuda sin nombre"}
+        </button>
+      )}
 
       <div style={{ marginBottom: 13 }}>
         <span className="lab">Qué es</span>

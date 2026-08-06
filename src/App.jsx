@@ -5,7 +5,7 @@ import Dinero from "./Dinero.jsx";
 import Presupuesto from "./Presupuesto.jsx";
 import Maquinaria from "./Maquinaria.jsx";
 import Ideas from "./Ideas.jsx";
-import Tramites from "./Tramites.jsx";
+import Papeleo from "./Papeleo.jsx";
 import Copia from "./Copia.jsx";
 import { IcoDinero, IcoObra, IcoMaquinas, IcoIdeas, IcoTramites, IcoCopia } from "./Iconos.jsx";
 
@@ -14,7 +14,7 @@ const TABS = [
   ["presupuesto", "Obra", IcoObra],
   ["maquinaria", "Máquinas", IcoMaquinas],
   ["ideas", "Ideas", IcoIdeas],
-  ["tramites", "Trámites", IcoTramites],
+  ["papeleo", "Papeleo", IcoTramites],
   ["copia", "Copia", IcoCopia],
 ];
 
@@ -89,7 +89,7 @@ export default function App() {
         {tab === "presupuesto" && <Presupuesto {...comun} />}
         {tab === "maquinaria" && <Maquinaria {...comun} />}
         {tab === "ideas" && <Ideas {...comun} irAElemento={irAElemento} />}
-        {tab === "tramites" && <Tramites {...comun} />}
+        {tab === "papeleo" && <Papeleo {...comun} />}
         {tab === "copia" && <Copia datos={datos} onGuardar={guardar} nube={nube} />}
       </div>
 

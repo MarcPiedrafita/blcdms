@@ -448,6 +448,261 @@ select {
   color: var(--suave);
 }
 
+/* ---------- carrusel de ruedas ---------- */
+
+.carrusel {
+  margin: 4px 0 18px;
+}
+
+.carrusel > .pista {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.carrusel > .pista::-webkit-scrollbar {
+  display: none;
+}
+
+.carrusel .hoja {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  min-width: 0;
+}
+
+.carrusel .hoja .rueda {
+  margin-bottom: 12px;
+}
+
+.mando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.flecha {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--suave);
+  font-size: 17px;
+  border-radius: var(--r);
+  transition: color 0.15s, opacity 0.15s;
+}
+
+.flecha:disabled {
+  opacity: 0.25;
+}
+
+.flecha:not(:disabled):active {
+  color: var(--tinta);
+}
+
+.puntos {
+  display: flex;
+  gap: 7px;
+}
+
+.puntos button {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--linea);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.puntos button.on {
+  background: var(--senal);
+  transform: scale(1.25);
+}
+
+.rotulo-carrusel {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--suave);
+  margin-top: 9px;
+}
+
+/* Grados de certeza de las ayudas: de lo firme a lo que todavía es una idea. */
+.rueda .a-concedida {
+  stroke: var(--senal);
+}
+.rueda .a-solicitada {
+  stroke: #a8c518;
+}
+.rueda .a-explorando {
+  stroke: #5c6a16;
+}
+
+/* ---------- interruptor ---------- */
+
+.interruptor {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  width: 100%;
+  text-align: left;
+  padding: 15px 0 0;
+  border-top: 1px solid var(--linea);
+  margin-bottom: 4px;
+}
+
+.interruptor .pomo {
+  flex: none;
+  position: relative;
+  width: 40px;
+  height: 23px;
+  border-radius: 12px;
+  background: var(--panel2);
+  border: 1px solid var(--linea);
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.interruptor .pomo::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--suave);
+  transition: transform 0.18s cubic-bezier(0.2, 0.85, 0.25, 1), background 0.18s;
+}
+
+.interruptor.on .pomo {
+  background: var(--senal);
+  border-color: transparent;
+}
+
+.interruptor.on .pomo::after {
+  background: var(--sobre-senal);
+  transform: translateX(17px);
+}
+
+.interruptor .et {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* ---------- ayudas ---------- */
+
+.est {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 2px;
+  border: 1px solid var(--linea);
+  color: var(--suave);
+}
+
+.est.e-concedida {
+  background: var(--senal);
+  color: var(--sobre-senal);
+  border-color: transparent;
+}
+
+.est.e-solicitada {
+  color: var(--tinta);
+  border-color: var(--tinta);
+}
+
+.est.e-denegada {
+  color: var(--rojo);
+  border-color: color-mix(in srgb, var(--rojo) 45%, transparent);
+}
+
+.prog-req {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--suave);
+}
+
+.prog-req .mal {
+  color: var(--rojo);
+}
+
+.c-ayuda {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  font-size: 14px;
+  flex: none;
+}
+
+.req {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--linea2);
+}
+
+.req .txt {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--suave);
+}
+
+/* Solo lo que te deja fuera se marca. Pintar también los cumplidos llenaría
+   la lista de color y dejaría de señalar nada. */
+.req.c-si .txt {
+  color: var(--tinta);
+}
+
+.req.c-no .txt {
+  color: var(--rojo);
+}
+
+/* Tres botones diminutos: sí, no, y no lo sé. */
+.seg.mini3 {
+  flex: none;
+  width: 108px;
+}
+
+.seg.mini3 button {
+  padding: 7px 0;
+  font-size: 10px;
+}
+
+.colgado {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--linea);
+  border-left: 3px solid var(--senal);
+  border-radius: var(--r);
+  padding: 11px 13px;
+  margin-bottom: 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.p-ayuda {
+  background: var(--senal);
+}
+
 /* Punto de color que ata cada partida del desglose a su trozo de la rueda. */
 .punto {
   display: inline-block;

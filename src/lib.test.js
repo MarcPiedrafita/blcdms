@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   VACIO,
+  nuevaAyuda,
+  ayudas,
   nuevoTramite,
   TIPOS_TRAMITE,
   URGENCIAS,
@@ -557,5 +559,96 @@ describe("lo que cuestan los trámites", () => {
     const d = { ...VACIO, dinero: VACIO.dinero };
     delete d.tramites;
     expect(totales(d).tramites).toBe(0);
+  });
+});
+
+describe("ayudas", () => {
+  const con = (lista) => datos({ ayudas: lista.map((a) => ({ ...nuevaAyuda(), ...a })) });
+
+  it("agrupa por lo firme que es cada una", () => {
+    const a = ayudas(con([
+      { estado: "concedida", importe: 11000 },
+      { estado: "solicitada", importe: 4000 },
+      { estado: "explorando", importe: 2000 },
+    ]));
+    expect(a.concedida).toBe(11000);
+    expect(a.solicitada).toBe(4000);
+    expect(a.explorando).toBe(2000);
+    expect(a.total).toBe(17000);
+    expect(a.firme).toBe(11000);
+  });
+
+  /* El importe se guarda para saber qué te has perdido, pero no es dinero. */
+  it("una denegada no suma al total", () => {
+    const a = ayudas(con([{ estado: "concedida", importe: 5000 }, { estado: "denegada", importe: 9000 }]));
+    expect(a.denegada).toBe(9000);
+    expect(a.total).toBe(5000);
+  });
+
+  it("las que no tienen importe no rompen la suma", () => {
+    expect(ayudas(con([{ estado: "concedida", importe: null }])).total).toBe(0);
+  });
+
+  it("un estado desconocido se ignora en vez de reventar", () => {
+    expect(ayudas(con([{ estado: "loquesea", importe: 100 }])).total).toBe(0);
+  });
+
+  it("sin lista de ayudas devuelve ceros", () => {
+    expect(ayudas({}).total).toBe(0);
+  });
+});
+
+describe("aplicar las ayudas al objetivo", () => {
+  const base = { precioCasa: 50000, impuestosPct: 10, colchonPct: 0 };
+  const conAyuda = (importe, aplicar) =>
+    objetivo(datos({
+      dinero: { ...base, aplicarAyudas: aplicar },
+      ayudas: [{ ...nuevaAyuda(), estado: "concedida", importe }],
+    }));
+
+  it("apagado, el objetivo no se entera", () => {
+    const o = conAyuda(11000, false);
+    expect(o.aplicaAyudas).toBe(false);
+    expect(o.ayudas).toBe(0);
+    expect(o.valor).toBe(55000);
+    expect(o.valor).toBe(o.bruto);
+  });
+
+  it("encendido, baja el objetivo pero no el coste", () => {
+    const o = conAyuda(11000, true);
+    expect(o.calculado).toBe(55000); // lo que cuesta sigue siendo lo mismo
+    expect(o.bruto).toBe(55000);
+    expect(o.ayudas).toBe(11000);
+    expect(o.valor).toBe(44000);
+  });
+
+  /* Si te dieran más de lo que cuesta, lo que sobra no es ahorro negativo. */
+  it("no puede dejar el objetivo por debajo de cero", () => {
+    const o = conAyuda(90000, true);
+    expect(o.valor).toBe(0);
+    expect(o.ayudas).toBe(55000);
+  });
+
+  it("se aplica también sobre un objetivo forzado a mano", () => {
+    const o = objetivo(datos({
+      dinero: { ...base, objetivoManual: 30000, aplicarAyudas: true },
+      ayudas: [{ ...nuevaAyuda(), estado: "concedida", importe: 5000 }],
+    }));
+    expect(o.bruto).toBe(30000);
+    expect(o.valor).toBe(25000);
+    expect(o.esManual).toBe(true);
+  });
+
+  it("una denegada no baja el objetivo aunque esté encendido", () => {
+    const o = objetivo(datos({
+      dinero: { ...base, aplicarAyudas: true },
+      ayudas: [{ ...nuevaAyuda(), estado: "denegada", importe: 11000 }],
+    }));
+    expect(o.valor).toBe(55000);
+  });
+
+  it("sin ayudas apuntadas, encender el interruptor no cambia nada", () => {
+    const o = objetivo(datos({ dinero: { ...base, aplicarAyudas: true } }));
+    expect(o.valor).toBe(55000);
   });
 });

@@ -11,12 +11,14 @@ export const VACIO = {
     impuestosPct: 10,
     colchonPct: 15,
     objetivoManual: null,
+    aplicarAyudas: false,
   },
   categorias: [],
   elementos: [],
   maquinas: [],
   ideas: [],
   tramites: [],
+  ayudas: [],
   ultimaCopia: null,
 };
 
@@ -35,6 +37,7 @@ export function leer() {
       ideas: d.ideas || [],
       // Una copia hecha antes de que existieran los trámites no trae el campo.
       tramites: d.tramites || [],
+      ayudas: d.ayudas || [],
     };
   } catch (e) {
     return VACIO;
@@ -150,7 +153,41 @@ export const nuevoTramite = () => ({
   urgencia: "antelacion",
   coste: null, // vacío = todavía no sabes lo que cuesta, o no cuesta nada
   hecho: false,
+  ayudaId: null, // si nace de una ayuda, cuál
   creado: Date.now(),
+});
+
+/* ---------- ayudas ----------
+ *
+ *  Los cuatro estados van de menos a más firme. Importa mucho la diferencia:
+ *  una ayuda que estás mirando no es dinero, y una concedida sí. */
+export const ESTADOS_AYUDA = [
+  ["explorando", "La estoy mirando"],
+  ["solicitada", "Solicitada"],
+  ["concedida", "Concedida"],
+  ["denegada", "Denegada"],
+];
+
+/* Un requisito solo puede estar en uno de tres sitios, y el tercero no es un
+   detalle: «no lo sé» es el estado en el que empiezan casi todos, y meterlo con
+   los incumplidos haría parecer imposible una ayuda que a lo mejor te toca. */
+export const CUMPLIMIENTOS = [
+  ["si", "Lo cumplo"],
+  ["no", "No lo cumplo"],
+  ["?", "No lo sé"],
+];
+
+export const nuevoRequisito = (texto = "") => ({ id: uid(), texto, cumplido: "?" });
+
+export const nuevaAyuda = () => ({
+  id: uid(),
+  nombre: "",
+  organismo: "",
+  importe: null,
+  estado: "explorando",
+  notas: "",
+  requisitos: [],
+  creada: Date.now(),
 });
 
 /* ---------- cálculos ---------- */
@@ -201,6 +238,19 @@ export function totales(d) {
   return { ...r, tramites, imprescindible, extra, total: imprescindible + extra };
 }
 
+/** Lo que esperas cobrar en ayudas, partido por lo firme que es cada una. */
+export function ayudas(d) {
+  const r = { explorando: 0, solicitada: 0, concedida: 0, denegada: 0 };
+  for (const a of d.ayudas || []) {
+    if (r[a.estado] == null) continue;
+    r[a.estado] += Number(a.importe) || 0;
+  }
+  /* Una denegada no suma. El importe se sigue guardando —sirve para saber qué
+     te has perdido y para reabrirla si recurres— pero no es dinero contable. */
+  const total = r.explorando + r.solicitada + r.concedida;
+  return { ...r, total, firme: r.concedida };
+}
+
 /** Objetivo de ahorro: casa + impuestos + imprescindibles, y encima el colchón.
  *
  *  El colchón va sobre la suma de todo, no solo sobre la obra. Calculándolo
@@ -226,6 +276,15 @@ export function objetivo(d) {
   const colchon = antesDelColchon * ((Number(d.dinero.colchonPct) || 0) / 100);
   const calculado = antesDelColchon + colchon;
   const manual = d.dinero.objetivoManual;
+  const bruto = manual != null ? Number(manual) : calculado;
+
+  /* Las ayudas no tocan el objetivo mientras no le des al interruptor. Aunque
+     esté puesto, lo que descuentan no puede pasar del propio objetivo: si te
+     dieran más de lo que cuesta la casa, lo que sobra no es ahorro negativo. */
+  const ay = ayudas(d);
+  const aplica = !!d.dinero.aplicarAyudas;
+  const descuento = aplica ? Math.min(bruto, ay.total) : 0;
+
   return {
     precio,
     casa,
@@ -236,7 +295,10 @@ export function objetivo(d) {
     antesDelColchon,
     colchon,
     calculado,
-    valor: manual != null ? Number(manual) : calculado,
+    bruto,
+    ayudas: descuento,
+    aplicaAyudas: aplica,
+    valor: bruto - descuento,
     esManual: manual != null,
   };
 }
