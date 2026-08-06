@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { nuevaAyuda, nuevoRequisito, nuevoTramite, num, eur, ayudas as calcAyudas, ESTADOS_AYUDA, CUMPLIMIENTOS } from "./lib.js";
+import { nuevaAyuda, nuevoRequisito, nuevoTramite, num, eur, hoy, frescura, ayudas as calcAyudas, ESTADOS_AYUDA, CUMPLIMIENTOS } from "./lib.js";
 import { PLANTILLAS } from "./ayudasEstado.js";
 import { IcoHecho } from "./Iconos.jsx";
 
@@ -90,9 +90,10 @@ function Lista({ datos, onGuardar, setAbierto }) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="nom">{x.nombre || "Sin nombre"}</div>
                   {x.organismo && <div className="det">{x.organismo}</div>}
-                  <div style={{ marginTop: 7, display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ marginTop: 7, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <span className={`est e-${x.estado}`}>{NOMBRE_ESTADO[x.estado]}</span>
                     <Progreso ayuda={x} />
+                    <Caducidad comprobado={x.comprobado} breve />
                   </div>
                 </div>
                 {x.importe != null && (
@@ -131,6 +132,21 @@ function Plantillas({ onUsar }) {
   );
 }
 
+/* Las convocatorias salen una vez al año: a partir de medio año lo apuntado
+   puede ser de una que ya cerró, y al año se da por viejo. */
+function Caducidad({ comprobado, breve }) {
+  const f = frescura(comprobado);
+  /* En la lista solo se marca lo que pide atención. «Sin comprobar» la pide
+     más que ninguna: es la única de la que no sabes ni cuándo la miraste. */
+  if (f.estado === "sin") return <span className="cad c-sin">sin comprobar</span>;
+  if (breve && f.estado === "fresco") return null;
+
+  const cuando =
+    f.meses === 0 ? "este mes" : f.meses === 1 ? "hace un mes" : `hace ${f.meses} meses`;
+
+  return <span className={`cad c-${f.estado}`}>comprobado {cuando}</span>;
+}
+
 function Progreso({ ayuda }) {
   const r = ayuda.requisitos || [];
   if (!r.length) return null;
@@ -141,6 +157,38 @@ function Progreso({ ayuda }) {
       {no > 0 && <b className="mal">{no} sin cumplir</b>}
       {no === 0 && `${si}/${r.length} comprobados`}
     </span>
+  );
+}
+
+/* Una ayuda no caduca sola, pero la información sí. Esto no bloquea nada: solo
+   te dice desde cuándo no lo miras, para que no cuentes con dinero de una
+   convocatoria cerrada. */
+function Revision({ ayuda, onComprobar }) {
+  const f = frescura(ayuda.comprobado);
+  if (f.estado === "fresco") {
+    return (
+      <div className="revision">
+        <Caducidad comprobado={ayuda.comprobado} />
+        <button className="link" onClick={onComprobar}>Lo he mirado hoy</button>
+      </div>
+    );
+  }
+  return (
+    <div className="aviso" style={{ marginBottom: 16 }}>
+      <b>
+        {f.estado === "sin"
+          ? "No consta cuándo comprobaste esto"
+          : f.meses >= 12
+          ? `Esto lo comprobaste hace ${f.meses} meses`
+          : `Van ${f.meses} meses desde que lo comprobaste`}
+      </b>
+      <br />
+      Las convocatorias se publican una vez al año, con plazo y con presupuesto que se agota. Lo que tengas
+      apuntado aquí puede ser de una que ya cerró. Míralo antes de contar con el dinero.
+      <div style={{ marginTop: 12 }}>
+        <button className="btn sec mini" onClick={onComprobar}>Lo he mirado hoy</button>
+      </div>
+    </div>
   );
 }
 
@@ -221,6 +269,8 @@ function Ficha({ datos, ayuda, onCambio, onGuardar, onBorrar, onVolver, irATrami
             : "Aparece en la rueda de ayudas. Solo baja el objetivo de ahorro si activas «aplicar ayudas» en la pestaña de dinero."}
         </div>
       </div>
+
+      <Revision ayuda={ayuda} onComprobar={() => set("comprobado", hoy())} />
 
       <div style={{ marginBottom: 13 }}>
         <span className="lab">Por dónde va</span>

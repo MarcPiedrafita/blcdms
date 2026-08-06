@@ -187,8 +187,30 @@ export const nuevaAyuda = () => ({
   estado: "explorando",
   notas: "",
   requisitos: [],
+  comprobado: hoy(), // cuándo miraste por última vez si esto sigue siendo verdad
   creada: Date.now(),
 });
+
+/* Cuánto hace que no compruebas una ayuda.
+ *
+ *  Los seis meses no son un número redondo cualquiera: las convocatorias
+ *  autonómicas salen una vez al año, así que a partir de medio año lo que
+ *  tengas apuntado puede ser de una convocatoria que ya cerró. Al año se da
+ *  por viejo directamente.
+ *
+ *  `ahora` se pasa por fuera para que los tests no dependan del reloj. */
+export function frescura(comprobado, ahora = Date.now()) {
+  if (!comprobado) return { meses: null, estado: "sin" };
+  const d = new Date(comprobado);
+  const n = new Date(ahora);
+  if (isNaN(d)) return { meses: null, estado: "sin" };
+
+  let meses = (n.getFullYear() - d.getFullYear()) * 12 + (n.getMonth() - d.getMonth());
+  if (n.getDate() < d.getDate()) meses--;
+  meses = Math.max(0, meses);
+
+  return { meses, estado: meses >= 12 ? "viejo" : meses >= 6 ? "tibio" : "fresco" };
+}
 
 /* ---------- cálculos ---------- */
 

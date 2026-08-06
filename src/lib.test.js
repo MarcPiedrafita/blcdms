@@ -3,6 +3,7 @@ import {
   VACIO,
   nuevaAyuda,
   ayudas,
+  frescura,
   nuevoTramite,
   TIPOS_TRAMITE,
   URGENCIAS,
@@ -650,5 +651,60 @@ describe("aplicar las ayudas al objetivo", () => {
   it("sin ayudas apuntadas, encender el interruptor no cambia nada", () => {
     const o = objetivo(datos({ dinero: { ...base, aplicarAyudas: true } }));
     expect(o.valor).toBe(55000);
+  });
+});
+
+describe("frescura de la información de una ayuda", () => {
+  const EN = (iso) => new Date(iso).getTime();
+
+  it("recién comprobada está fresca", () => {
+    const f = frescura("2026-08-01", EN("2026-08-06"));
+    expect(f.meses).toBe(0);
+    expect(f.estado).toBe("fresco");
+  });
+
+  it("a los cinco meses sigue fresca", () => {
+    expect(frescura("2026-03-06", EN("2026-08-06")).estado).toBe("fresco");
+  });
+
+  /* Seis meses porque las convocatorias son anuales: a partir de ahí lo
+     apuntado puede ser de una que ya cerró. */
+  it("a los seis se pone tibia", () => {
+    const f = frescura("2026-02-06", EN("2026-08-06"));
+    expect(f.meses).toBe(6);
+    expect(f.estado).toBe("tibio");
+  });
+
+  it("al año se da por vieja", () => {
+    const f = frescura("2025-08-06", EN("2026-08-06"));
+    expect(f.meses).toBe(12);
+    expect(f.estado).toBe("viejo");
+  });
+
+  it("cuenta meses cumplidos, no cambios de mes", () => {
+    // Del 20 de febrero al 6 de agosto no son seis meses todavía.
+    expect(frescura("2026-02-20", EN("2026-08-06")).meses).toBe(5);
+    expect(frescura("2026-02-06", EN("2026-08-06")).meses).toBe(6);
+  });
+
+  it("cruza el cambio de año", () => {
+    expect(frescura("2025-11-06", EN("2026-08-06")).meses).toBe(9);
+  });
+
+  it("sin fecha no inventa una antigüedad", () => {
+    expect(frescura(null).estado).toBe("sin");
+    expect(frescura(undefined).meses).toBe(null);
+  });
+
+  it("una fecha ilegible se trata como que no hay", () => {
+    expect(frescura("esto no es una fecha").estado).toBe("sin");
+  });
+
+  it("una fecha futura no da meses negativos", () => {
+    expect(frescura("2027-01-01", EN("2026-08-06")).meses).toBe(0);
+  });
+
+  it("una ayuda nueva nace comprobada hoy", () => {
+    expect(frescura(nuevaAyuda().comprobado).estado).toBe("fresco");
   });
 });

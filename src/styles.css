@@ -629,6 +629,34 @@ select {
   border-color: color-mix(in srgb, var(--rojo) 45%, transparent);
 }
 
+.cad {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--suave);
+}
+
+.cad.c-tibio {
+  color: var(--ambar);
+}
+
+.cad.c-viejo,
+.cad.c-sin {
+  color: var(--rojo);
+}
+
+.revision {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--linea2);
+}
+
 .prog-req {
   font-family: var(--mono);
   font-size: 10px;
