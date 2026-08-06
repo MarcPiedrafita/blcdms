@@ -18,6 +18,10 @@ Con el campo de entrada vacío se entiende que pagas la casa entera de tu bolsil
 
 Lo que cuesta un trámite cuenta entero como imprescindible y sube el objetivo de ahorro, igual que una partida de obra: sin la licencia no hay obra y sin la cédula no entras a vivir, así que no hay versión «extra» de esto. Lo ya marcado como hecho sigue sumando a propósito — la app no lleva el gasto real, así que lo pagado no se descuenta de tus ahorros; si además se cayera del objetivo, el objetivo bajaría mientras el ahorro se queda igual y parecerías más cerca de lo que estás. La lista se ordena sola por esa urgencia y lo marcado como hecho baja al fondo sin borrarse, que sirve de registro. La cabecera cuenta lo pendiente y cuánto de ello hay que pedir con tiempo.
 
+**Ayudas.** Dinero que no hay que devolver, con sus requisitos uno a uno y tres respuestas para cada uno: lo cumplo, no lo cumplo, no lo sé. El tercero no es un adorno: es donde empiezan casi todos, y meterlo con los incumplidos haría parecer imposible una ayuda que a lo mejor te toca. Cada ayuda pasa por cuatro estados —la estoy mirando, solicitada, concedida, denegada— y una denegada deja de contar aunque se guarde el importe. Los papeles que haya que mover cuelgan de la ayuda y aparecen también entre los trámites.
+
+Vienen dos plantillas rellenas con el **Real Decreto 326/2026** (Plan Estatal de Vivienda 2026-2030): la ayuda a jóvenes para comprar en municipios de 10.000 habitantes o menos —20% del precio con tope de 15.000 €— y la de rehabilitación. Comprobado en agosto de 2026. Son un punto de partida para editar, no una resolución: quien fija las cifras finales, el precio máximo de la vivienda y los plazos es la convocatoria de cada comunidad autónoma.
+
 **Copia.** Exportar e importar un `.json`. Empieza explicando qué es y por qué hace falta, porque «Copia» a secas no dice nada: los datos viven solo en el móvil y el fichero es lo único que hay entre ellos y perderlos. Avisa en rojo si hace más de treinta días de la última copia. En el móvil sale el menú de compartir, para guardarla en Archivos o mandársela a quien sea.
 
 Nada tiene botón de guardar: cada cambio se escribe solo. Las fichas de obra, máquinas e ideas llevan al final un botón para encadenar la siguiente sin volver a la lista.
@@ -108,7 +112,12 @@ src/Rueda.jsx           la rueda: composición del objetivo y avance
 src/Presupuesto.jsx     categorías, elementos y líneas
 src/Maquinaria.jsx      alquilar o comprar
 src/Ideas.jsx           notas
+src/Papeleo.jsx         la pestaña con dos vistas: ayudas y trámites
+src/Ayudas.jsx          ayudas, requisitos y trámites colgados
+src/ayudasEstado.js     plantillas del Real Decreto 326/2026
 src/Tramites.jsx        papeleo, con tipo y urgencia
+src/Carrusel.jsx        las dos ruedas de dinero, deslizables
+src/RuedaAyudas.jsx     las ayudas a escala del objetivo
 src/Iconos.jsx          los iconos, dibujados a mano
 src/Copia.jsx           exportar e importar
 src/Sincronizacion.jsx  entrar, estado y conflictos

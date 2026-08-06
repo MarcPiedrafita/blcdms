@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { eur, hoy, uid, num, objetivo, ahorrado, prevision, totales } from "./lib.js";
+import { eur, hoy, uid, num, objetivo, ahorrado, prevision, totales, ayudas as calcAyudas } from "./lib.js";
 import Rueda from "./Rueda.jsx";
+import RuedaAyudas from "./RuedaAyudas.jsx";
+import Carrusel from "./Carrusel.jsx";
 
 export default function Dinero({ datos, onGuardar, onQuitar }) {
   const [importe, setImporte] = useState("");
@@ -12,6 +14,7 @@ export default function Dinero({ datos, onGuardar, onQuitar }) {
 
   const t = totales(datos);
   const obj = objetivo(datos);
+  const ay = calcAyudas(datos);
   const tengo = ahorrado(datos);
   const falta = Math.max(0, obj.valor - tengo);
   const pct = obj.valor > 0 ? Math.min(100, (tengo / obj.valor) * 100) : 0;
@@ -41,10 +44,60 @@ export default function Dinero({ datos, onGuardar, onQuitar }) {
         <div className="sub">{pct.toFixed(0)}% del objetivo</div>
       </header>
 
-      <Rueda obj={obj} tengo={tengo} pct={pct} />
-      <div className="pie-dato" style={{ textAlign: "center", margin: "0 0 4px" }}>
-        de {eur(obj.valor)} · faltan {eur(falta)}
-      </div>
+      <Carrusel
+        paginas={[
+          {
+            clave: "objetivo",
+            titulo: "Lo que hay que juntar",
+            contenido: (
+              <>
+                <Rueda obj={obj} tengo={tengo} pct={pct} />
+                <div className="pie-dato" style={{ textAlign: "center", margin: 0 }}>
+                  de {eur(obj.valor)} · faltan {eur(falta)}
+                  {obj.aplicaAyudas && obj.ayudas > 0 && (
+                    <span className="matiz" style={{ textAlign: "center" }}>
+                      {eur(obj.bruto)} menos {eur(obj.ayudas)} de ayudas
+                    </span>
+                  )}
+                </div>
+              </>
+            ),
+          },
+          {
+            clave: "ayudas",
+            titulo: "Lo que puede que te den",
+            contenido: (
+              <>
+                <RuedaAyudas a={ay} objetivoBruto={obj.bruto} />
+                <div className="pie-dato" style={{ textAlign: "center", margin: 0 }}>
+                  {ay.total === 0
+                    ? "todavía sin apuntar ninguna"
+                    : `${eur(ay.firme)} concedido · ${eur(ay.total - ay.firme)} por confirmar`}
+                </div>
+              </>
+            ),
+          },
+        ]}
+      />
+
+      {ay.total > 0 && (
+        <button
+          className={`interruptor${obj.aplicaAyudas ? " on" : ""}`}
+          role="switch"
+          aria-checked={obj.aplicaAyudas}
+          onClick={() => set("aplicarAyudas", !obj.aplicaAyudas)}
+        >
+          <span className="pomo" />
+          <span className="et">
+            Aplicar ayudas al objetivo
+            <span className="matiz">
+              {obj.aplicaAyudas
+                ? `Bajan el objetivo ${eur(obj.ayudas)}. De ese dinero solo ${eur(ay.firme)} está concedido.`
+                : `Apagado: el objetivo cuenta el coste entero, sin descontar los ${eur(ay.total)} que esperas.`}
+            </span>
+          </span>
+        </button>
+      )}
 
       {prev && (
         <div className="aviso" style={{ marginTop: 16 }}>
@@ -109,6 +162,23 @@ export default function Dinero({ datos, onGuardar, onQuitar }) {
             )}
             <div className="desg suma" style={{ borderTop: "none", marginTop: 6, paddingTop: 0 }}>
               <span className="n">Objetivo forzado a mano</span>
+              <span className="c">{eur(obj.bruto)}</span>
+            </div>
+          </>
+        )}
+
+        {obj.aplicaAyudas && obj.ayudas > 0 && (
+          <>
+            <div className="desg">
+              <span className="n">
+                <i className="punto p-ayuda" />
+                Ayudas aplicadas
+                <span className="matiz">{eur(ay.firme)} concedido · el resto todavía no</span>
+              </span>
+              <span className="c">−{eur(obj.ayudas)}</span>
+            </div>
+            <div className="desg suma" style={{ borderTop: "none", marginTop: 6, paddingTop: 0 }}>
+              <span className="n">Objetivo con ayudas</span>
               <span className="c">{eur(obj.valor)}</span>
             </div>
           </>
