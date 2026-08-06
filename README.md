@@ -10,6 +10,12 @@ Con el campo de entrada vacío se entiende que pagas la casa entera de tu bolsil
 
 **Obra.** Categorías que creas tú (Cocina, Patio, Tejado…). Dentro, elementos. Cada elemento tiene fase (imprescindible / extra), estado (idea, decidido, comprado, hecho) y líneas de material: concepto, cantidad, unidad y precio por unidad. Tienda y enlace son opcionales y están plegados.
 
+**Plantillas** (segunda vista de Obra). Presupuestos tipo —reforma integral, reforma parcial— montados sobre una casa de referencia de los metros que tú digas, para sacar un €/m² con el que comparar casas antes de comprarlas. Se construyen igual que el presupuesto: categorías, elementos y partidas con cantidad y precio.
+
+Cada partida se marca **por metro** o **coste fijo**, y la marca va en la partida y no en el elemento porque un mismo elemento lleva de las dos: la fontanería escala con los metros, la acometida que la alimenta cuesta lo mismo en una casa de 60 que en una de 200. El €/m² sale solo de lo que escala; lo fijo se suma aparte. Sin esa separación las casas pequeñas salen baratísimas y es mentira —una plantilla de 40.000 € por metro más 6.000 € fijos da 26.000 € en 50 m², no 23.000—, así que si no hay ninguna partida marcada como fija la ficha lo avisa.
+
+Cada plantilla da dos ratios, solo lo esencial y con extras, que es el mismo corte que ya usa el presupuesto. Desde Obra se genera el presupuesto de una casa concreta eligiendo plantilla y metros reales: las cantidades por metro se escalan, las fijas se copian tal cual, y a partir de ahí se edita libremente sin tocar la plantilla. Las categorías que ya existan con el mismo nombre se reutilizan en vez de duplicarse.
+
 **Máquinas.** Días de uso, precio por día y precio de compra. Calcula cuál sale más barato y a partir de cuántos días cambia la respuesta, y suma la opción elegida al presupuesto. Se puede forzar alquilar o comprar.
 
 **Ideas.** Notas libres con etiqueta casa o patio. Sin precios. Botón para convertir una idea en elemento del presupuesto; el texto pasa a las notas del elemento.
@@ -24,7 +30,7 @@ Cada ayuda guarda cuándo comprobaste su información por última vez, y la fich
 
 Vienen dos plantillas rellenas con el **Real Decreto 326/2026** (Plan Estatal de Vivienda 2026-2030): la ayuda a jóvenes para comprar en municipios de 10.000 habitantes o menos —20% del precio con tope de 15.000 €— y la de rehabilitación. Comprobado en agosto de 2026. Son un punto de partida para editar, no una resolución: quien fija las cifras finales, el precio máximo de la vivienda y los plazos es la convocatoria de cada comunidad autónoma.
 
-**Copia.** Exportar e importar un `.json`. Empieza explicando qué es y por qué hace falta, porque «Copia» a secas no dice nada: los datos viven solo en el móvil y el fichero es lo único que hay entre ellos y perderlos. Avisa en rojo si hace más de treinta días de la última copia. En el móvil sale el menú de compartir, para guardarla en Archivos o mandársela a quien sea.
+**Copia.** Exportar e importar un `.json`, y un botón que copia los ratios de las plantillas separados por tabuladores para pegarlos en una hoja de cálculo. Los números van en crudo y con punto decimal, no formateados en euros: una hoja con «1.234,56 €» dentro no suma. Empieza explicando qué es y por qué hace falta, porque «Copia» a secas no dice nada: los datos viven solo en el móvil y el fichero es lo único que hay entre ellos y perderlos. Avisa en rojo si hace más de treinta días de la última copia. En el móvil sale el menú de compartir, para guardarla en Archivos o mandársela a quien sea.
 
 Nada tiene botón de guardar: cada cambio se escribe solo. Las fichas de obra, máquinas e ideas llevan al final un botón para encadenar la siguiente sin volver a la lista.
 
@@ -111,7 +117,9 @@ src/useNube.js          cuándo sincronizar, cosido a React
 src/App.jsx             pestañas y deshacer
 src/Dinero.jsx          ahorros y objetivo
 src/Rueda.jsx           la rueda: composición del objetivo y avance
+src/Obra.jsx            la pestaña con dos vistas: presupuesto y plantillas
 src/Presupuesto.jsx     categorías, elementos y líneas
+src/Plantillas.jsx      presupuestos tipo y €/m²
 src/Maquinaria.jsx      alquilar o comprar
 src/Ideas.jsx           notas
 src/Papeleo.jsx         la pestaña con dos vistas: ayudas y trámites

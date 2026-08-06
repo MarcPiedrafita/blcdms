@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { leer, escribir, VACIO } from "./lib.js";
 import { useNube } from "./useNube.js";
 import Dinero from "./Dinero.jsx";
-import Presupuesto from "./Presupuesto.jsx";
+import Obra from "./Obra.jsx";
 import Maquinaria from "./Maquinaria.jsx";
 import Ideas from "./Ideas.jsx";
 import Papeleo from "./Papeleo.jsx";
@@ -86,7 +86,7 @@ export default function App() {
     <>
       <div className="wrap">
         {tab === "dinero" && <Dinero datos={datos} onGuardar={guardar} onQuitar={quitar} />}
-        {tab === "presupuesto" && <Presupuesto {...comun} />}
+        {tab === "presupuesto" && <Obra {...comun} />}
         {tab === "maquinaria" && <Maquinaria {...comun} />}
         {tab === "ideas" && <Ideas {...comun} irAElemento={irAElemento} />}
         {tab === "papeleo" && <Papeleo {...comun} />}

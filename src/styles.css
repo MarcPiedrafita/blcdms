@@ -1487,3 +1487,183 @@ select {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- plantillas de presupuesto ---------- */
+
+/* El €/m² es el número por el que existe la pantalla: se queda arriba
+   mientras editas partidas, que es cuando quieres verlo moverse. */
+.ratios {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  gap: 10px;
+  padding: 12px 0 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--linea);
+  background: color-mix(in srgb, var(--fondo) 92%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.ratios .par {
+  flex: 1;
+  min-width: 0;
+  background: var(--panel);
+  border: 1px solid var(--linea);
+  border-radius: var(--r);
+  padding: 11px 12px;
+}
+
+.ratios .par:first-child {
+  border-left: 3px solid var(--senal);
+}
+
+.ratios .k {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--suave);
+  margin-bottom: 6px;
+}
+
+.ratios .v {
+  font-family: var(--display);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variation-settings: "wdth" 80, "opsz" 30;
+  font-variant-numeric: tabular-nums;
+}
+
+.ratios .v span {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--suave);
+  margin-left: 2px;
+}
+
+.ratios .f {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--suave);
+  margin-top: 5px;
+}
+
+.ratios .sin-metros {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ambar);
+  padding: 10px 0;
+}
+
+.ratio-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 7px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--suave);
+}
+
+.ratio-fila b {
+  color: var(--tinta);
+  font-variant-numeric: tabular-nums;
+}
+
+.ratio-fila i {
+  font-style: normal;
+}
+
+.cab-cat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.tot-cat {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.el-pl {
+  border-top: 1px solid var(--linea2);
+  padding: 11px 0;
+}
+
+.el-pl .cabecera {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.el-pl .nombre {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  text-align: left;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.el-pl .disc {
+  display: inline-block;
+  color: var(--suave);
+  transition: transform 0.15s;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.el-pl .disc.on {
+  transform: rotate(90deg);
+}
+
+.el-pl .cabecera .tot {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  flex: none;
+}
+
+.el-pl .lineas {
+  margin-top: 12px;
+  padding-left: 14px;
+  border-left: 1px solid var(--linea2);
+}
+
+/* Dos botones para elegir si la partida escala o no. */
+.seg.mini2 {
+  flex: none;
+  width: 168px;
+}
+
+.seg.mini2 button {
+  padding: 6px 0;
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+}
+
+.pie-el {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 14px;
+}

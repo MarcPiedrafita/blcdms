@@ -19,6 +19,7 @@ export const VACIO = {
   ideas: [],
   tramites: [],
   ayudas: [],
+  plantillas: [],
   ultimaCopia: null,
 };
 
@@ -38,6 +39,7 @@ export function leer() {
       // Una copia hecha antes de que existieran los trámites no trae el campo.
       tramites: d.tramites || [],
       ayudas: d.ayudas || [],
+      plantillas: d.plantillas || [],
     };
   } catch (e) {
     return VACIO;
@@ -108,6 +110,106 @@ export const nuevaLinea = () => ({
   tienda: "",
   enlace: "",
 });
+
+/* ---------- plantillas de presupuesto ----------
+ *
+ *  Un presupuesto tipo sobre una casa de referencia de X metros, para poder
+ *  sacar un €/m² con el que comparar casas antes de comprarlas.
+ *
+ *  La marca va en la línea y no en el elemento porque un mismo elemento puede
+ *  llevar de las dos: la fontanería escala con los metros, pero la acometida
+ *  que la alimenta cuesta lo mismo en una casa de 60 que en una de 200. */
+export const ESCALAS = [
+  ["metro", "Por metro"],
+  ["fijo", "Coste fijo"],
+];
+
+export const nuevaLineaPlantilla = () => ({ ...nuevaLinea(), escala: "metro" });
+
+export const nuevaPlantilla = (nombre = "") => ({
+  id: uid(),
+  nombre,
+  metros: 100,
+  categorias: [],
+  elementos: [],
+  creada: Date.now(),
+});
+
+/** Lo que cuesta la plantilla, partido en lo que escala y lo que no.
+ *
+ *  Cada mitad sale además en dos versiones, solo lo imprescindible y con los
+ *  extras, que es el mismo corte que ya usa el presupuesto. */
+export function ratios(p) {
+  const metros = Number(p?.metros) || 0;
+  const acc = {
+    imprescindible: { metro: 0, fijo: 0 },
+    extra: { metro: 0, fijo: 0 },
+  };
+
+  for (const e of p?.elementos || []) {
+    const fase = e.fase === "extra" ? "extra" : "imprescindible";
+    for (const l of e.lineas || []) {
+      acc[fase][l.escala === "fijo" ? "fijo" : "metro"] += totalLinea(l);
+    }
+  }
+
+  const arma = (porMetro, fijo) => ({
+    porMetro,
+    fijo,
+    /* Sin metros de referencia el ratio no existe. Devolver 0 sería mentir
+       menos que dividir entre cero, pero igual hay que enseñarlo aparte. */
+    ratio: metros > 0 ? porMetro / metros : 0,
+    total: porMetro + fijo,
+  });
+
+  const esencial = arma(acc.imprescindible.metro, acc.imprescindible.fijo);
+  const conExtras = arma(
+    acc.imprescindible.metro + acc.extra.metro,
+    acc.imprescindible.fijo + acc.extra.fijo
+  );
+
+  return { metros, esencial, conExtras, sinMetros: metros <= 0 };
+}
+
+/** Lo que costaría esa plantilla en una casa de `m` metros. */
+export const estimar = (r, m) => r.ratio * (Number(m) || 0) + r.fijo;
+
+/** Categorías y elementos nuevos, con las cantidades por metro ya escaladas.
+ *
+ *  Las líneas de coste fijo se copian tal cual: una fosa séptica no se
+ *  multiplica por los metros de la casa. */
+export function desdePlantilla(p, metrosReales) {
+  const origen = Number(p?.metros) || 0;
+  const destino = Number(metrosReales) || 0;
+  const factor = origen > 0 ? destino / origen : 1;
+
+  const mapaCat = new Map();
+  const categorias = (p?.categorias || []).map((c) => {
+    const nueva = nuevaCategoria(c.nombre);
+    mapaCat.set(c.id, nueva.id);
+    return nueva;
+  });
+
+  const elementos = (p?.elementos || []).map((e) => ({
+    ...nuevoElemento(mapaCat.get(e.categoriaId) || null, e.nombre),
+    fase: e.fase === "extra" ? "extra" : "imprescindible",
+    notas: e.notas || "",
+    lineas: (e.lineas || []).map((l) => ({
+      ...nuevaLinea(),
+      concepto: l.concepto,
+      unidad: l.unidad,
+      precio: l.precio,
+      tienda: l.tienda || "",
+      enlace: l.enlace || "",
+      cantidad:
+        l.escala === "fijo"
+          ? l.cantidad
+          : Math.round((Number(l.cantidad) || 0) * factor * 100) / 100,
+    })),
+  }));
+
+  return { categorias, elementos, factor };
+}
 
 export const nuevaMaquina = (nombre) => ({
   id: uid(),

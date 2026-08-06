@@ -4,6 +4,13 @@ import {
   nuevaAyuda,
   ayudas,
   frescura,
+  nuevaPlantilla,
+  nuevaLineaPlantilla,
+  nuevaLinea,
+  nuevoElemento,
+  ratios,
+  estimar,
+  desdePlantilla,
   nuevoTramite,
   TIPOS_TRAMITE,
   URGENCIAS,
@@ -706,5 +713,149 @@ describe("frescura de la información de una ayuda", () => {
 
   it("una ayuda nueva nace comprobada hoy", () => {
     expect(frescura(nuevaAyuda().comprobado).estado).toBe("fresco");
+  });
+});
+
+describe("plantillas: ratios y coste fijo", () => {
+  const ln = (cantidad, precio, escala = "metro") => ({ ...nuevaLineaPlantilla(), cantidad, precio, escala });
+  const el = (fase, lineas) => ({ ...nuevoElemento("c", "x"), fase, lineas });
+  const pl = (metros, elementos) => ({ ...nuevaPlantilla("p"), metros, elementos });
+
+  it("el €/m² sale solo de lo que escala", () => {
+    const r = ratios(pl(100, [el("imprescindible", [ln(1, 40000), ln(1, 9000, "fijo")])]));
+    expect(r.esencial.porMetro).toBe(40000);
+    expect(r.esencial.fijo).toBe(9000);
+    expect(r.esencial.ratio).toBe(400);
+    expect(r.esencial.total).toBe(49000);
+  });
+
+  /* El fallo que hay que evitar: si el coste fijo entrase en el ratio, una
+     casa de 50 m² saldría a mitad de precio cuando la fosa séptica cuesta
+     exactamente lo mismo. */
+  it("meter el fijo en el ratio abarataría las casas pequeñas", () => {
+    const r = ratios(pl(100, [el("imprescindible", [ln(1, 40000), ln(1, 9000, "fijo")])]));
+    expect(estimar(r.esencial, 50)).toBe(29000); // 400 × 50 + 9.000
+    expect(estimar(r.esencial, 50)).not.toBe(24500); // lo que saldría metiéndolo todo
+  });
+
+  it("los extras dan un segundo ratio, sin tocar el esencial", () => {
+    const r = ratios(pl(100, [
+      el("imprescindible", [ln(1, 30000)]),
+      el("extra", [ln(1, 10000), ln(1, 2000, "fijo")]),
+    ]));
+    expect(r.esencial.ratio).toBe(300);
+    expect(r.esencial.fijo).toBe(0);
+    expect(r.conExtras.ratio).toBe(400);
+    expect(r.conExtras.fijo).toBe(2000);
+  });
+
+  it("sin metros de referencia no inventa un ratio", () => {
+    const r = ratios(pl(0, [el("imprescindible", [ln(1, 5000)])]));
+    expect(r.sinMetros).toBe(true);
+    expect(r.ratio).toBe(undefined);
+    expect(r.esencial.ratio).toBe(0);
+    expect(r.esencial.porMetro).toBe(5000);
+  });
+
+  it("una línea sin escala marcada cuenta como que escala", () => {
+    const suelta = { ...nuevaLinea(), cantidad: 1, precio: 1000 };
+    const r = ratios(pl(100, [el("imprescindible", [suelta])]));
+    expect(r.esencial.porMetro).toBe(1000);
+    expect(r.esencial.fijo).toBe(0);
+  });
+
+  it("una plantilla vacía no revienta", () => {
+    expect(ratios(nuevaPlantilla("x")).esencial.total).toBe(0);
+    expect(ratios({}).sinMetros).toBe(true);
+  });
+
+  it("estimar es ratio por metros más el fijo", () => {
+    const r = ratios(pl(80, [el("imprescindible", [ln(1, 24000), ln(1, 6000, "fijo")])]));
+    expect(r.esencial.ratio).toBe(300);
+    expect(estimar(r.esencial, 80)).toBe(30000); // la casa de referencia
+    expect(estimar(r.esencial, 160)).toBe(54000); // el doble de metros, no el doble de dinero
+  });
+});
+
+describe("generar un presupuesto desde una plantilla", () => {
+  const base = {
+    ...nuevaPlantilla("Integral"),
+    metros: 100,
+    categorias: [{ id: "c1", nombre: "Cubierta" }],
+    elementos: [
+      {
+        ...nuevoElemento("c1", "Tejado"),
+        fase: "imprescindible",
+        lineas: [
+          { ...nuevaLineaPlantilla(), concepto: "Teja", cantidad: 200, precio: 18, escala: "metro" },
+          { ...nuevaLineaPlantilla(), concepto: "Fosa", cantidad: 1, precio: 4000, escala: "fijo" },
+        ],
+      },
+    ],
+  };
+
+  it("escala las cantidades de lo que va por metro", () => {
+    const { elementos } = desdePlantilla(base, 50);
+    expect(elementos[0].lineas[0].cantidad).toBe(100); // 200 × 0,5
+  });
+
+  it("deja intacto lo que es coste fijo", () => {
+    const { elementos } = desdePlantilla(base, 50);
+    expect(elementos[0].lineas[1].cantidad).toBe(1);
+    expect(elementos[0].lineas[1].precio).toBe(4000);
+  });
+
+  it("el presupuesto generado cuadra con lo que estimaba el ratio", () => {
+    const r = ratios(base);
+    const { elementos } = desdePlantilla(base, 50);
+    const suma = elementos.reduce((s, e) => s + totalElemento(e), 0);
+    expect(suma).toBeCloseTo(estimar(r.conExtras, 50), 2);
+  });
+
+  it("los ids son nuevos, para no pisar la plantilla al editar", () => {
+    const { categorias, elementos } = desdePlantilla(base, 100);
+    expect(categorias[0].id).not.toBe("c1");
+    expect(elementos[0].id).not.toBe(base.elementos[0].id);
+    expect(elementos[0].categoriaId).toBe(categorias[0].id);
+    expect(elementos[0].lineas[0].id).not.toBe(base.elementos[0].lineas[0].id);
+  });
+
+  it("conserva la fase de cada elemento", () => {
+    const conExtra = { ...base, elementos: [{ ...base.elementos[0], fase: "extra" }] };
+    expect(desdePlantilla(conExtra, 100).elementos[0].fase).toBe("extra");
+  });
+
+  it("a los mismos metros no cambia nada", () => {
+    const { elementos, factor } = desdePlantilla(base, 100);
+    expect(factor).toBe(1);
+    expect(elementos[0].lineas[0].cantidad).toBe(200);
+  });
+
+  it("una plantilla sin metros no multiplica por cero", () => {
+    const { factor } = desdePlantilla({ ...base, metros: 0 }, 80);
+    expect(factor).toBe(1);
+  });
+
+  it("el estado de partida es idea, aunque en la plantilla fuera otro", () => {
+    const { elementos } = desdePlantilla(base, 100);
+    expect(elementos[0].estado).toBe("idea");
+  });
+});
+
+describe("las plantillas viajan en la copia", () => {
+  it("el estado vacío las trae", () => {
+    expect(VACIO.plantillas).toEqual([]);
+  });
+
+  it("una copia anterior a las plantillas se abre con la lista vacía", () => {
+    const m = new Map();
+    globalThis.localStorage = {
+      getItem: (k) => (m.has(k) ? m.get(k) : null),
+      setItem: (k, v) => m.set(k, v),
+      removeItem: (k) => m.delete(k),
+    };
+    m.set(KEY, JSON.stringify({ categorias: [], elementos: [], ideas: [] }));
+    expect(leer().plantillas).toEqual([]);
+    delete globalThis.localStorage;
   });
 });

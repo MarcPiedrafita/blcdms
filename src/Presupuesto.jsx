@@ -96,15 +96,6 @@ function Lista({ datos, onGuardar, onQuitar, setAbierto }) {
 
   return (
     <>
-      <header className="cab">
-        <div className="marca">
-          <em>El</em>Presupuesto
-        </div>
-        <div className="sub">
-          {datos.elementos.length} elementos · {datos.categorias.length} categorías
-        </div>
-      </header>
-
       <div className="duo" style={{ marginBottom: 18 }}>
         <div className="imp">
           <div className="k">Imprescindible</div>

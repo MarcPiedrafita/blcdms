@@ -1,7 +1,94 @@
 import React, { useRef, useState } from "react";
-import { VACIO, eur, totales, objetivo, ahorrado } from "./lib.js";
+import { VACIO, eur, totales, objetivo, ahorrado, ratios } from "./lib.js";
 import Sincronizacion from "./Sincronizacion.jsx";
 import { hayNube } from "./nube.js";
+
+/* Los ratios en texto separado por tabuladores: pegado en una hoja de cálculo
+   cae en columnas solo, sin tener que trocear nada a mano.
+ *
+ *  Los números van en crudo y con punto decimal, no formateados en euros: una
+ *  hoja de cálculo con «1.234,56 €» dentro no suma. Formatear es cosa de la
+ *  hoja; lo que tiene que llegar es el número. */
+const CABECERA = [
+  "Plantilla",
+  "m2 referencia",
+  "EUR/m2 esencial",
+  "Fijo esencial",
+  "EUR/m2 con extras",
+  "Fijo con extras",
+];
+
+const aTsv = (plantillas) =>
+  [
+    CABECERA.join("\t"),
+    ...plantillas.map((p) => {
+      const r = ratios(p);
+      return [
+        p.nombre || "Sin nombre",
+        r.metros,
+        r.esencial.ratio.toFixed(2),
+        r.esencial.fijo.toFixed(2),
+        r.conExtras.ratio.toFixed(2),
+        r.conExtras.fijo.toFixed(2),
+      ].join("\t");
+    }),
+  ].join("\n");
+
+function Ratios({ plantillas }) {
+  const [copiado, setCopiado] = useState(false);
+  const [fallo, setFallo] = useState(false);
+  const area = useRef(null);
+  const tsv = aTsv(plantillas);
+
+  const copiar = async () => {
+    setFallo(false);
+    try {
+      await navigator.clipboard.writeText(tsv);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 4000);
+    } catch (e) {
+      /* Sin permiso de portapapeles —pasa en Safari fuera de un gesto, y en
+         páginas sin https— se enseña el texto para copiarlo a mano. */
+      setFallo(true);
+      setTimeout(() => area.current?.select(), 0);
+    }
+  };
+
+  return (
+    <div className="blq">
+      <div className="tit">Ratios para la hoja de casas</div>
+      <p className="parrafo">
+        El €/m² de cada plantilla y su coste fijo, en columnas. Se pega directamente en una hoja de cálculo
+        para comparar casas.
+      </p>
+
+      <button className="btn sec" onClick={copiar}>
+        {copiado ? "Copiado" : "Copiar los ratios"}
+      </button>
+
+      {fallo && (
+        <>
+          <div className="ayuda" style={{ color: "var(--ambar)" }}>
+            El navegador no me ha dejado copiar. Aquí lo tienes para copiarlo a mano:
+          </div>
+          <textarea
+            ref={area}
+            readOnly
+            rows={plantillas.length + 2}
+            value={tsv}
+            aria-label="Ratios para copiar"
+            style={{ fontFamily: "var(--mono)", fontSize: 11 }}
+          />
+        </>
+      )}
+
+      <div className="ayuda">
+        El fijo va aparte a propósito: no depende de los metros, así que en la hoja se suma entero a cada
+        casa en vez de multiplicarse.
+      </div>
+    </div>
+  );
+}
 
 export default function Copia({ datos, onGuardar, nube }) {
   const input = useRef(null);
@@ -164,6 +251,8 @@ export default function Copia({ datos, onGuardar, nube }) {
           Exportar copia
         </button>
       </div>
+
+      {datos.plantillas.length > 0 && <Ratios plantillas={datos.plantillas} />}
 
       <div className="blq">
         <div className="tit">Restaurar</div>
