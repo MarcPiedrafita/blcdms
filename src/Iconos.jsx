@@ -119,3 +119,203 @@ export const IcoHecho = (p) => (
     <path d="M4.5 12.5l5 5 10-11" />
   </Svg>
 );
+
+/* ---------- iconos de las fases del temario ----------
+ *
+ *  Uno por fase, dibujados con las mismas primitivas que los demás. Se evitan
+ *  a propósito las formas que ya usan las pestañas —ladrillos, engranaje,
+ *  bombilla— para que dos cosas distintas no se lean igual.
+ */
+
+/* 0 · Diana: objetivos y visión. */
+const IcoDiana = (p) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="8.6" />
+    <circle cx="12" cy="12" r="4.4" />
+    <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+  </Svg>
+);
+
+/* 1 · Muro sobre su zapata, con la línea del terreno. Una columna suelta se
+   leía como un número romano. */
+const IcoCimiento = (p) => (
+  <Svg {...p}>
+    <path d="M9 3.4v8.6M15 3.4v8.6" />
+    <path d="M2.6 12h18.8" />
+    <path d="M6 12h12l2.2 7.6H3.8z" />
+  </Svg>
+);
+
+/* 2 · Lupa: ir a ver casas y mirarlas de cerca. */
+const IcoLupa = (p) => (
+  <Svg {...p}>
+    <circle cx="10.4" cy="10.4" r="6.3" />
+    <path d="M15 15l4.6 4.6" />
+  </Svg>
+);
+
+/* 3 · Palé de material apilado. */
+const IcoPale = (p) => (
+  <Svg {...p}>
+    <rect x="3.6" y="5.6" width="16.8" height="4.2" />
+    <rect x="3.6" y="11.6" width="16.8" height="4.2" />
+    <path d="M6.4 15.8v3.6M17.6 15.8v3.6" />
+  </Svg>
+);
+
+/* 4 · Caja de herramientas. */
+const IcoCaja = (p) => (
+  <Svg {...p}>
+    <rect x="3.4" y="8.6" width="17.2" height="10.8" />
+    <path d="M9 8.6V7a1.6 1.6 0 0 1 1.6-1.6h2.8A1.6 1.6 0 0 1 15 7v1.6" />
+    <path d="M3.4 13.2h17.2" />
+  </Svg>
+);
+
+/* 5 · Paleta de albañil: hoja triangular y mango. De perfil se leía como un
+   taburete, así que va vista de plano. */
+const IcoPaleta = (p) => (
+  <Svg {...p}>
+    <path d="M2.8 15.2L12.4 5.6l5.6 5.6z" />
+    <path d="M16 9.2l2.6-2.6" />
+    <path d="M17.9 4.3a1.7 1.7 0 0 1 2.4 2.4l-1 1-2.4-2.4z" />
+  </Svg>
+);
+
+/* 6 · Cubierta a dos aguas con su alero. */
+const IcoCubierta = (p) => (
+  <Svg {...p}>
+    <path d="M2.8 13.4L12 5.6l9.2 7.8" />
+    <path d="M5.4 13.4v5.2h13.2v-5.2" />
+    <path d="M1.8 14.6h20.4" />
+  </Svg>
+);
+
+/* 7 · Muro por capas, con el aislante en medio. */
+const IcoCapas = (p) => (
+  <Svg {...p}>
+    <rect x="3.6" y="4.6" width="16.8" height="14.8" />
+    <path d="M8.6 4.6v14.8M15.4 4.6v14.8" />
+    <path d="M10.2 8.2h3.6M10.2 12h3.6M10.2 15.8h3.6" />
+  </Svg>
+);
+
+/* 8 · Serrucho: carpintería. */
+const IcoSierra = (p) => (
+  <Svg {...p}>
+    <path d="M3.4 8.4h13.2v4.2H3.4z" />
+    <path d="M3.4 12.6l1.5 2 1.5-2 1.5 2 1.5-2 1.5 2 1.5-2 1.5 2 1.5-2" strokeWidth="1.3" />
+    <path d="M16.6 10.5h2.2a1.8 1.8 0 0 1 1.8 1.8v3.4" />
+  </Svg>
+);
+
+/* 9 · Grifo: fontanería. */
+const IcoGrifo = (p) => (
+  <Svg {...p}>
+    <path d="M4.4 9.6h6.2v3.2H4.4z" />
+    <path d="M10.6 11.2h4.2a2.4 2.4 0 0 1 2.4 2.4v2.2" />
+    <path d="M6.2 9.6V7.4a2 2 0 0 1 2-2h.8" />
+    <path d="M17.2 18.4v2.2" strokeWidth="1.3" />
+  </Svg>
+);
+
+/* 10 · Rayo: electricidad. */
+const IcoRayo = (p) => (
+  <Svg {...p}>
+    <path d="M13.4 2.8L5.2 13.6h5.6l-.6 7.6 8.4-11h-5.8z" />
+  </Svg>
+);
+
+/* 11 · Radiador: climatización. */
+const IcoRadiador = (p) => (
+  <Svg {...p}>
+    <rect x="4.4" y="6.6" width="15.2" height="11.4" rx="1" />
+    <path d="M8.2 6.6v11.4M12 6.6v11.4M15.8 6.6v11.4" />
+    <path d="M6.6 18v2.4M17.4 18v2.4" strokeWidth="1.3" />
+  </Svg>
+);
+
+/* 12 · La casa entera: reforma integral. */
+const IcoCasa = (p) => (
+  <Svg {...p}>
+    <path d="M3.6 10.4L12 4l8.4 6.4v9.8H3.6z" />
+    <path d="M9.6 20.2v-6h4.8v6" />
+  </Svg>
+);
+
+/* 13 · Plano de planta: diseño y distribución. */
+const IcoPlano = (p) => (
+  <Svg {...p}>
+    <rect x="3.6" y="4.6" width="16.8" height="14.8" />
+    <path d="M3.6 12.4h7.2v7M10.8 4.6v4.2" />
+    <path d="M14.4 12.4h6" />
+  </Svg>
+);
+
+/* 14 · Árbol: el exterior. */
+const IcoArbol = (p) => (
+  <Svg {...p}>
+    <path d="M12 3.4l-5.6 8h3.2l-3.6 5.4h12l-3.6-5.4h3.2z" />
+    <path d="M12 16.8v4" />
+  </Svg>
+);
+
+/* 15 · Placa solar: autosuficiencia. */
+const IcoPlaca = (p) => (
+  <Svg {...p}>
+    <path d="M3 16.4L6 6.4h12l3 10z" />
+    <path d="M4.5 11.4h15M11.2 6.4l-1.4 10M12.8 6.4l1.4 10" />
+    <path d="M12 16.4v4.2" strokeWidth="1.3" />
+  </Svg>
+);
+
+/* 16 · Balanza: finanzas y legalidad. */
+const IcoBalanza = (p) => (
+  <Svg {...p}>
+    <path d="M12 4.6v15.8M6.6 20.4h10.8" />
+    <path d="M4 7.6h16" />
+    <path d="M1.8 13.4l3-5.8 3 5.8a3 3 0 0 1-6 0ZM16.2 13.4l3-5.8 3 5.8a3 3 0 0 1-6 0Z" />
+  </Svg>
+);
+
+/* 17 · Calendario: el mantenimiento se hace por fechas. */
+const IcoCalendario = (p) => (
+  <Svg {...p}>
+    <rect x="3.6" y="5.6" width="16.8" height="14.8" rx="1" />
+    <path d="M3.6 10h16.8M8.4 3.2v4.4M15.6 3.2v4.4" />
+    <path d="M8 14h3M13 14h3M8 17.2h3" strokeWidth="1.3" />
+  </Svg>
+);
+
+/* 18 · Martillo: los proyectos prácticos son ya ponerse. El casco que había
+   antes se leía como una campana. */
+const IcoMartillo = (p) => (
+  <Svg {...p}>
+    <rect x="5" y="4.2" width="14" height="4.6" rx="0.8" />
+    <path d="M12 8.8v11" />
+    <path d="M5 6.5H2.4" />
+  </Svg>
+);
+
+/* Por número de fase, en el orden del temario. */
+export const ICONOS_FASE = {
+  0: IcoDiana,
+  1: IcoCimiento,
+  2: IcoLupa,
+  3: IcoPale,
+  4: IcoCaja,
+  5: IcoPaleta,
+  6: IcoCubierta,
+  7: IcoCapas,
+  8: IcoSierra,
+  9: IcoGrifo,
+  10: IcoRayo,
+  11: IcoRadiador,
+  12: IcoCasa,
+  13: IcoPlano,
+  14: IcoArbol,
+  15: IcoPlaca,
+  16: IcoBalanza,
+  17: IcoCalendario,
+  18: IcoMartillo,
+};

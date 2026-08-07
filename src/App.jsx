@@ -7,6 +7,7 @@ import Maquinaria from "./Maquinaria.jsx";
 import Ideas from "./Ideas.jsx";
 import Papeleo from "./Papeleo.jsx";
 import Copia from "./Copia.jsx";
+import Temario from "./Temario.jsx";
 import { IcoDinero, IcoObra, IcoMaquinas, IcoIdeas, IcoTramites, IcoCopia } from "./Iconos.jsx";
 
 const TABS = [
@@ -18,9 +19,19 @@ const TABS = [
   ["copia", "Copia", IcoCopia],
 ];
 
+/* Dos mundos que no se mezclan: la obra es dinero y decisiones de una casa
+   concreta; el temario es aprender, y dura años. Meterlos en la misma barra de
+   pestañas obligaba a una séptima y dejaba los rótulos sin sitio, pero sobre
+   todo los ponía al mismo nivel y no lo están. */
+const MUNDOS = [
+  ["obra", "La obra"],
+  ["temario", "Aprender"],
+];
+
 const ESPERA = 7000;
 
 export default function App() {
+  const [mundo, setMundo] = useState("obra");
   const [tab, setTab] = useState("dinero");
   const [datos, setDatos] = useState(leer);
   const [abierto, setAbierto] = useState(null);
@@ -68,11 +79,18 @@ export default function App() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [tab, abierto]);
+  }, [tab, abierto, mundo]);
 
   const cambiarTab = (k) => {
     setAbierto(null);
     setTab(k);
+  };
+
+  /* Cambiar de mundo cierra lo que hubiera abierto: los ids de un lado no
+     significan nada en el otro, y una ficha abierta se quedaría en blanco. */
+  const cambiarMundo = (m) => {
+    setAbierto(null);
+    setMundo(m);
   };
 
   const irAElemento = (id) => {
@@ -84,13 +102,32 @@ export default function App() {
 
   return (
     <>
+      <div className="mundos">
+        {MUNDOS.map(([k, l]) => (
+          <button
+            key={k}
+            className={mundo === k ? "on" : ""}
+            aria-current={mundo === k ? "true" : undefined}
+            onClick={() => cambiarMundo(k)}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+
       <div className="wrap">
-        {tab === "dinero" && <Dinero datos={datos} onGuardar={guardar} onQuitar={quitar} />}
-        {tab === "presupuesto" && <Obra {...comun} />}
-        {tab === "maquinaria" && <Maquinaria {...comun} />}
-        {tab === "ideas" && <Ideas {...comun} irAElemento={irAElemento} />}
-        {tab === "papeleo" && <Papeleo {...comun} />}
-        {tab === "copia" && <Copia datos={datos} onGuardar={guardar} nube={nube} />}
+        {mundo === "temario" ? (
+          <Temario datos={datos} onGuardar={guardar} abierto={abierto} setAbierto={setAbierto} />
+        ) : (
+          <>
+            {tab === "dinero" && <Dinero datos={datos} onGuardar={guardar} onQuitar={quitar} />}
+            {tab === "presupuesto" && <Obra {...comun} />}
+            {tab === "maquinaria" && <Maquinaria {...comun} />}
+            {tab === "ideas" && <Ideas {...comun} irAElemento={irAElemento} />}
+            {tab === "papeleo" && <Papeleo {...comun} />}
+            {tab === "copia" && <Copia datos={datos} onGuardar={guardar} nube={nube} />}
+          </>
+        )}
       </div>
 
       {deshacer && (
@@ -109,7 +146,9 @@ export default function App() {
         </div>
       )}
 
-      <nav className="tabs">
+      {/* El temario no tiene pestañas: es una sola cosa con su propia
+          navegación por dentro. */}
+      <nav className="tabs" hidden={mundo === "temario"}>
         {TABS.map(([k, t, Ico]) => (
           <button
             key={k}
