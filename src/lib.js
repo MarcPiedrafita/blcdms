@@ -20,6 +20,7 @@ export const VACIO = {
   tramites: [],
   ayudas: [],
   plantillas: [],
+  estudio: {},
   ultimaCopia: null,
 };
 
@@ -40,6 +41,8 @@ export function leer() {
       tramites: d.tramites || [],
       ayudas: d.ayudas || [],
       plantillas: d.plantillas || [],
+      // El estudio es un objeto por id, no una lista.
+      estudio: d.estudio && typeof d.estudio === "object" ? d.estudio : {},
     };
   } catch (e) {
     return VACIO;
@@ -242,6 +245,52 @@ export const nuevoEquipo = (nombre) => ({
 });
 
 export const esEquipo = (m) => m?.tipo === "equipo";
+
+/* ---------- estudio ----------
+ *
+ *  Lo que añades sobre cada punto del temario. El temario en sí es contenido
+ *  fijo y vive en temario.js; aquí solo va lo tuyo, indexado por el id de la
+ *  unidad, para que actualizar el índice no arrastre tus notas. */
+export const ESTADOS_ESTUDIO = [
+  ["pendiente", "Pendiente"],
+  ["estudiando", "Estudiando"],
+  ["sabido", "Lo sé"],
+];
+
+export const APUNTE_VACIO = { estado: "pendiente", notas: "", enlaces: [], dudas: "" };
+
+/** Lo tuyo sobre una unidad, o el vacío si todavía no la has tocado. */
+export const apunte = (d, id) => ({ ...APUNTE_VACIO, ...(d?.estudio?.[id] || {}) });
+
+export const nuevoEnlace = () => ({ id: uid(), titulo: "", url: "" });
+
+/** Una unidad cuenta como tocada si tiene algo tuyo dentro. Sirve para no
+ *  guardar registros vacíos y para saber si una fase está empezada. */
+export const tieneAlgo = (a) =>
+  a.estado !== "pendiente" || !!a.notas.trim() || !!a.dudas.trim() || a.enlaces.length > 0;
+
+/** Cuánto llevas de un puñado de unidades. */
+export function progreso(d, ids) {
+  let sabido = 0;
+  let estudiando = 0;
+  let conNotas = 0;
+  for (const id of ids) {
+    const a = apunte(d, id);
+    if (a.estado === "sabido") sabido++;
+    else if (a.estado === "estudiando") estudiando++;
+    if (a.notas.trim() || a.enlaces.length > 0) conNotas++;
+  }
+  const total = ids.length;
+  return {
+    total,
+    sabido,
+    estudiando,
+    conNotas,
+    /* El porcentaje cuenta solo lo sabido: «estudiando» es intención, no
+       conocimiento, y meterlo aquí inflaría el avance. */
+    pct: total > 0 ? (sabido / total) * 100 : 0,
+  };
+}
 
 export const nuevaIdea = () => ({
   id: uid(),

@@ -2,7 +2,13 @@
 
 Presupuesto de la reforma de la casa. React + Vite, sin servidor. Los datos se guardan en el navegador.
 
-## Qué hay dentro
+## Dos mundos
+
+La app se parte en dos sitios que no se mezclan. **La obra** es dinero y decisiones sobre una casa concreta: qué cuesta, cuánto llevas ahorrado, qué papeles faltan. **Aprender** es el temario de autoformación, que dura años y no tiene precios. Meterlos en la misma barra de pestañas obligaba a una séptima, dejaba los rótulos sin sitio y, sobre todo, los ponía al mismo nivel cuando no lo están.
+
+El interruptor va arriba del todo. En el temario no hay barra de pestañas: es una sola cosa con su propia navegación por dentro.
+
+## La obra
 
 **Dinero.** Lo ahorrado frente al objetivo, en una rueda que dice dos cosas a la vez: el anillo grueso es de qué se compone el objetivo, una variante del amarillo por partida, y el arco fino de dentro es cuánto llevas ahorrado. El avance va en tinta y no en amarillo para que se lea como otra medida y no como una quinta partida. Si fuerzas el objetivo por encima de lo calculado, ese margen sale como un trozo gris: sin él la rueda sumaría una cifra y el centro otra. El objetivo se calcula solo: lo que pones tú por la casa + impuestos (%) + total de partidas imprescindibles, y sobre esa suma un colchón para imprevistos (%).
 
@@ -41,6 +47,18 @@ Nada tiene botón de guardar: cada cambio se escribe solo. Las fichas de obra, m
 Solo las partidas marcadas como imprescindibles cuentan para el objetivo de ahorro. Los extras se suman aparte.
 
 Todo lo que se borra deja siete segundos para deshacerlo. Cualquier otro cambio cierra esa ventana, así que deshacer solo puede revertir lo último y nunca se lleva por delante una edición posterior.
+
+## Aprender
+
+**Temario.** El índice de autoformación: 19 fases, 115 apartados y 171 puntos que estudiar. Cada punto tiene estado —pendiente, estudiando, lo sé—, apuntes, recursos donde lo estás aprendiendo y dudas. El progreso se ve por fase y en global.
+
+El porcentaje cuenta solo lo sabido. «Estudiando» es intención, no conocimiento, y meterlo en el avance lo inflaría.
+
+Las dudas tienen su propio hueco a propósito: apuntar lo que no entiendes vale tanto como apuntar lo que sí, porque es la lista de lo que te queda.
+
+El índice es contenido fijo y vive en `temario.js`; lo tuyo se guarda aparte y se engancha por id, así que actualizar el temario no arrastra tus notas. Los ids salen del rótulo y no de la posición: reordenar una lista o meter un punto en medio no le cambia el id a los de abajo, que es lo que haría que tus notas aparecieran colgando de otro tema. Un registro que se queda sin nada dentro se borra en vez de quedarse ocupando sitio en la copia y en la sincronización.
+
+Un apartado con puntos no es una unidad de estudio: lo son sus puntos. Uno sin puntos sí, porque si no la fase 5 entera no tendría nada que marcar.
 
 ## Aspecto
 
