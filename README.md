@@ -18,6 +18,8 @@ Cada plantilla da dos ratios, solo lo esencial y con extras, que es el mismo cor
 
 **Máquinas.** Días de uso, precio por día y precio de compra. Calcula cuál sale más barato y a partir de cuántos días cambia la respuesta, y suma la opción elegida al presupuesto. Se puede forzar alquilar o comprar.
 
+**Equipo** (segunda vista de Máquinas). EPIs, herramienta de mano y consumibles: casco, guantes, gafas, botas. Va aparte porque un casco no se alquila y ahí la comparación de alquilar o comprar no pinta nada; lo que sí tiene y una máquina no es cantidad, porque el equipamiento se compra a puñados. Por dentro comparten lista para que el total de maquinaria salga de un solo sitio, y una máquina guardada antes de que existiera la distinción sigue tratándose como máquina.
+
 **Ideas.** Notas libres con etiqueta casa o patio. Sin precios. Botón para convertir una idea en elemento del presupuesto; el texto pasa a las notas del elemento.
 
 **Trámites.** El papeleo, que también frena una obra. Cada apunte es de un tipo —**trámite** (se pide y se espera), **documento** (se guarda y se enseña) o **pago** (tiene fecha límite y recargo)— con nombre, descripción, lo que cuesta y, lo que de verdad importa, cuánta antelación necesita: con mucha, justo antes, o ninguna.

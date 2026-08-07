@@ -12,6 +12,9 @@ import {
   estimar,
   desdePlantilla,
   nuevoTramite,
+  nuevoEquipo,
+  nuevaMaquina,
+  esEquipo,
   TIPOS_TRAMITE,
   URGENCIAS,
   leer,
@@ -857,5 +860,48 @@ describe("las plantillas viajan en la copia", () => {
     m.set(KEY, JSON.stringify({ categorias: [], elementos: [], ideas: [] }));
     expect(leer().plantillas).toEqual([]);
     delete globalThis.localStorage;
+  });
+});
+
+describe("equipamiento", () => {
+  it("un equipo nuevo se distingue de una máquina", () => {
+    expect(esEquipo(nuevoEquipo("Casco"))).toBe(true);
+    expect(esEquipo(nuevaMaquina("Hormigonera"))).toBe(false);
+  });
+
+  it("cuesta cantidad por precio, sin alquilar ni comprar", () => {
+    const c = costeMaquina({ ...nuevoEquipo("Guantes"), cantidad: 3, precio: 12.5 });
+    expect(c.coste).toBe(37.5);
+    expect(c.elegido).toBe(null);
+    expect(c.alquiler).toBe(null);
+    expect(c.compra).toBe(null);
+  });
+
+  it("a medio rellenar cuesta cero, no revienta", () => {
+    expect(costeMaquina({ ...nuevoEquipo("x"), precio: null }).coste).toBe(0);
+    expect(costeMaquina({ ...nuevoEquipo("x"), cantidad: null, precio: 20 }).coste).toBe(0);
+  });
+
+  /* Comparten lista para que el total de maquinaria salga de un solo sitio. */
+  it("suma al total de maquinaria por su fase, junto a las máquinas", () => {
+    const d = datos({
+      maquinas: [
+        { ...nuevaMaquina("Hormigonera"), dias: 3, precioDia: 10, fase: "imprescindible" },
+        { ...nuevoEquipo("Cascos"), cantidad: 2, precio: 15, fase: "imprescindible" },
+        { ...nuevoEquipo("Radio"), cantidad: 1, precio: 40, fase: "extra" },
+      ],
+    });
+    const t = totales(d);
+    expect(t.maquinaria.imprescindible).toBe(60); // 30 de alquiler + 30 de cascos
+    expect(t.maquinaria.extra).toBe(40);
+  });
+
+  /* Una máquina guardada antes de que existiera el tipo no trae el campo, y
+     tiene que seguir tratándose como máquina. */
+  it("una máquina antigua sin tipo no se convierte en equipo", () => {
+    const vieja = { id: "m", nombre: "Andamio", dias: 5, precioDia: 8, precioCompra: 300, decision: "auto" };
+    expect(esEquipo(vieja)).toBe(false);
+    expect(costeMaquina(vieja).elegido).toBe("alquilar");
+    expect(costeMaquina(vieja).coste).toBe(40);
   });
 });

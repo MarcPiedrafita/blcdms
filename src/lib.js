@@ -213,6 +213,7 @@ export function desdePlantilla(p, metrosReales) {
 
 export const nuevaMaquina = (nombre) => ({
   id: uid(),
+  tipo: "maquina",
   nombre,
   dias: null,
   precioDia: null,
@@ -222,6 +223,25 @@ export const nuevaMaquina = (nombre) => ({
   notas: "",
   creada: Date.now(),
 });
+
+/* Equipamiento: EPIs, herramienta de mano, consumibles.
+ *
+ *  Comparte lista con las máquinas para que el total de maquinaria salga de un
+ *  solo sitio, pero no tiene alquilar ni comprar: un casco se compra y punto.
+ *  Lo que sí tiene y una máquina no es cantidad —tres pares de guantes— porque
+ *  el equipamiento se compra a puñados. */
+export const nuevoEquipo = (nombre) => ({
+  id: uid(),
+  tipo: "equipo",
+  nombre,
+  cantidad: 1,
+  precio: null,
+  fase: "imprescindible",
+  notas: "",
+  creada: Date.now(),
+});
+
+export const esEquipo = (m) => m?.tipo === "equipo";
 
 export const nuevaIdea = () => ({
   id: uid(),
@@ -321,6 +341,18 @@ export const totalLinea = (l) => (Number(l.cantidad) || 0) * (Number(l.precio) |
 export const totalElemento = (e) => (e.lineas || []).reduce((s, l) => s + totalLinea(l), 0);
 
 export function costeMaquina(m) {
+  /* El equipamiento no se alquila: sale de multiplicar cantidad por precio.
+     Se resuelve aquí y no en otra función para que `totales` siga recorriendo
+     una sola lista sin enterarse de la diferencia. */
+  if (esEquipo(m)) {
+    return {
+      alquiler: null,
+      compra: null,
+      elegido: null,
+      coste: (Number(m.cantidad) || 0) * (Number(m.precio) || 0),
+    };
+  }
+
   const alquiler =
     m.dias != null && m.precioDia != null ? (Number(m.dias) || 0) * (Number(m.precioDia) || 0) : null;
   const compra = m.precioCompra != null ? Number(m.precioCompra) : null;
