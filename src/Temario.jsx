@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TEMARIO, UNIDADES_FASE, TODAS, POR_ID, unidades } from "./temario.js";
 import { apunte, progreso, nuevoEnlace, tieneAlgo, ESTADOS_ESTUDIO } from "./lib.js";
-import { IcoHecho } from "./Iconos.jsx";
+import { IcoHecho, ICONOS_FASE } from "./Iconos.jsx";
 
 const NOMBRE_ESTADO = Object.fromEntries(ESTADOS_ESTUDIO);
 
@@ -105,9 +105,13 @@ export default function Temario({ datos, onGuardar, abierto, setAbierto }) {
         <div style={{ marginTop: 12 }}>
           {TEMARIO.map((f) => {
             const p = progreso(datos, UNIDADES_FASE[f.id].map((u) => u.id));
+            const Ico = ICONOS_FASE[f.n];
             return (
               <button key={f.id} className="fase" onClick={() => setFase(f)}>
-                <div className="num">{f.n}</div>
+                <div className="marca-fase">
+                  {Ico && <Ico tam={24} />}
+                  <span className="n">{f.n}</span>
+                </div>
                 <div className="cuerpo">
                   <div className="tt">{f.titulo}</div>
                   <div className="barra-prog fina">
@@ -141,7 +145,9 @@ function Fase({ datos, fase, onAbrir, onVolver }) {
         <button className="volver" aria-label="Volver al temario" onClick={onVolver}>
           ←
         </button>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 12 }}>
+          {ICONOS_FASE[fase.n] &&
+            React.createElement(ICONOS_FASE[fase.n], { tam: 30, className: "ico ico-cab" })}
           <div className="marca" style={{ fontSize: 21 }}>
             <em>Fase {fase.n}</em>
             {fase.titulo}

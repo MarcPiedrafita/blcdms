@@ -50,7 +50,7 @@ Todo lo que se borra deja siete segundos para deshacerlo. Cualquier otro cambio 
 
 ## Aprender
 
-**Temario.** El índice de autoformación: 19 fases, 115 apartados y 171 puntos que estudiar. Cada punto tiene estado —pendiente, estudiando, lo sé—, apuntes, recursos donde lo estás aprendiendo y dudas. El progreso se ve por fase y en global.
+**Temario.** El índice de autoformación: 19 fases, 115 apartados y 171 puntos que estudiar. Cada fase lleva su icono —cimentación, paleta, cubierta, rayo, balanza…— con el número pequeño al lado: el icono identifica de un vistazo y el número solo sitúa. Cada punto tiene estado —pendiente, estudiando, lo sé—, apuntes, recursos donde lo estás aprendiendo y dudas. El progreso se ve por fase y en global.
 
 El porcentaje cuenta solo lo sabido. «Estudiando» es intención, no conocimiento, y meterlo en el avance lo inflaría.
 
@@ -66,7 +66,7 @@ Oscuro siempre, no lo que diga el teléfono. Grafito, con amarillo de alta visib
 
 La rueda del objetivo usa cuatro variantes de ese amarillo, de honda a clara en el mismo orden en que se listan las partidas. La escala va en ese sentido y no al revés porque el precio de la casa se come tres cuartos del anillo: con el tono más claro encima, esa masa deslumbra y el amarillo vivo acaba en las porciones diminutas. Honda abajo, el bulto queda tranquilo y lo que se ilumina es el colchón, que es precisamente el dinero que todavía es aire.
 
-Los iconos están dibujados a mano sobre una retícula de 24 en `Iconos.jsx`, no traídos de una librería: así pesan cero y siguen la misma geometría recta del resto. Nada de emojis —un emoji lo pinta el sistema operativo, así que cambia de forma y de color en cada teléfono y trae su propia paleta de fábrica, justo lo contrario de una app que usa un solo color como señal—. Todos van a `currentColor`, así que nunca se salen de la paleta, y el de la pestaña activa se va a amarillo como la banda de arriba.
+Los iconos están dibujados a mano sobre una retícula de 24 en `Iconos.jsx` —seis para las pestañas y diecinueve para las fases del temario—, no traídos de una librería: así pesan cero y siguen la misma geometría recta del resto. Nada de emojis —un emoji lo pinta el sistema operativo, así que cambia de forma y de color en cada teléfono y trae su propia paleta de fábrica, justo lo contrario de una app que usa un solo color como señal—. Todos van a `currentColor`, así que nunca se salen de la paleta, y el de la pestaña activa se va a amarillo como la banda de arriba.
 
 Tres tipografías, servidas desde `public/fonts` para que la app abra sin cobertura: **Bricolage Grotesque** para los rótulos y las cifras grandes, **Instrument Sans** para el texto y **IBM Plex Mono** para todo lo que es medida —unidades, cantidades, fechas e importes en columna—.
 
