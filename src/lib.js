@@ -374,9 +374,12 @@ export function totales(d) {
   const r = {
     obra: { imprescindible: 0, extra: 0 },
     maquinaria: { imprescindible: 0, extra: 0 },
+    equipamiento: { imprescindible: 0, extra: 0 },
   };
   for (const e of d.elementos) r.obra[e.fase] += totalElemento(e);
-  for (const m of d.maquinas) r.maquinaria[m.fase] += costeMaquina(m).coste;
+  for (const m of d.maquinas || []) {
+    r[esEquipo(m) ? "equipamiento" : "maquinaria"][m.fase] += costeMaquina(m).coste;
+  }
 
   /* Los trámites que cuestan dinero cuentan enteros como imprescindibles: sin
      la licencia no hay obra y sin la cédula no entras a vivir, así que no hay
@@ -389,9 +392,21 @@ export function totales(d) {
      dos lados se quedan quietos y la diferencia sigue siendo verdad. */
   const tramites = (d.tramites || []).reduce((s, t) => s + (Number(t.coste) || 0), 0);
 
-  const imprescindible = r.obra.imprescindible + r.maquinaria.imprescindible + tramites;
-  const extra = r.obra.extra + r.maquinaria.extra;
-  return { ...r, tramites, imprescindible, extra, total: imprescindible + extra };
+  const imprescindible =
+    r.obra.imprescindible + r.maquinaria.imprescindible + r.equipamiento.imprescindible + tramites;
+  const extra = r.obra.extra + r.maquinaria.extra + r.equipamiento.extra;
+
+  /* Las cuatro patas del imprescindible, en el orden en que se enseñan. Sacar
+     el desglose de aquí evita que cada pantalla lo recomponga a su manera y se
+     desvíe del total. */
+  const partes = [
+    ["obra", "Materiales de obra", r.obra.imprescindible],
+    ["maquinaria", "Maquinaria", r.maquinaria.imprescindible],
+    ["equipamiento", "Equipo y EPIs", r.equipamiento.imprescindible],
+    ["tramites", "Trámites y licencias", tramites],
+  ];
+
+  return { ...r, tramites, partes, imprescindible, extra, total: imprescindible + extra };
 }
 
 /** Lo que esperas cobrar en ayudas, partido por lo firme que es cada una. */

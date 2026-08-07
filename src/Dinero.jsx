@@ -129,14 +129,20 @@ export default function Dinero({ datos, onGuardar, onQuitar }) {
           <span className="n">
             <i className="punto p-obra" />
             Imprescindibles para entrar a vivir
-            {t.tramites > 0 && (
-              <span className="matiz">
-                obra y máquinas {eur(obj.obra - t.tramites)} · trámites {eur(t.tramites)}
-              </span>
-            )}
           </span>
           <span className="c">{eur(obj.obra)}</span>
         </div>
+
+        {/* Una fila por cosa: sin esto son cuatro conceptos distintos metidos
+            en un solo número y no se ve de dónde sale. */}
+        {t.partes
+          .filter(([, , v]) => v > 0)
+          .map(([k, etiqueta, v]) => (
+            <div className="desg sub" key={k}>
+              <span className="n">{etiqueta}</span>
+              <span className="c">{eur(v)}</span>
+            </div>
+          ))}
         <div className="desg">
           <span className="n">
             <i className="punto p-colchon" />

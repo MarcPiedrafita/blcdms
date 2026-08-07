@@ -47,6 +47,7 @@ export default function Obra({ datos, onGuardar, onQuitar, abierto, setAbierto }
 
       {vista === "presupuesto" ? (
         <>
+          <Desglose t={t} />
           {datos.plantillas.length > 0 && <Generar datos={datos} onGuardar={onGuardar} />}
           <Presupuesto {...comun} />
         </>
@@ -54,6 +55,50 @@ export default function Obra({ datos, onGuardar, onQuitar, abierto, setAbierto }
         <Plantillas {...comun} />
       )}
     </>
+  );
+}
+
+/* Qué cuesta la obra, por partes. «Imprescindible» a secas junta cuatro cosas
+   que se compran en sitios distintos —materiales, máquinas, EPIs y papeleo— y
+   así no se ve cuál se está comiendo el presupuesto.
+ *
+ *  Los extras van al final y aparte, porque no cuentan para el objetivo de
+ *  ahorro y mezclarlos arriba haría parecer que sí. */
+function Desglose({ t }) {
+  const conValor = t.partes.filter(([, , v]) => v > 0);
+
+  if (t.total === 0) return null;
+
+  return (
+    <div className="blq" style={{ marginTop: 0, marginBottom: 22, borderTop: "none", paddingTop: 0 }}>
+      {conValor.length === 0 ? (
+        <div className="ayuda" style={{ marginTop: 0 }}>
+          Todavía no hay nada imprescindible presupuestado.
+        </div>
+      ) : (
+        conValor.map(([k, etiqueta, v]) => (
+          <div className="desg" key={k}>
+            <span className="n">{etiqueta}</span>
+            <span className="c">{eur(v)}</span>
+          </div>
+        ))
+      )}
+
+      <div className="desg suma">
+        <span className="n">Imprescindible</span>
+        <span className="c">{eur(t.imprescindible)}</span>
+      </div>
+
+      {t.extra > 0 && (
+        <div className="desg" style={{ borderBottom: "none" }}>
+          <span className="n">
+            Extras
+            <span className="matiz">aparte: no cuentan para el objetivo de ahorro</span>
+          </span>
+          <span className="c">{eur(t.extra)}</span>
+        </div>
+      )}
+    </div>
   );
 }
 

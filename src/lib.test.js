@@ -892,8 +892,11 @@ describe("equipamiento", () => {
       ],
     });
     const t = totales(d);
-    expect(t.maquinaria.imprescindible).toBe(60); // 30 de alquiler + 30 de cascos
-    expect(t.maquinaria.extra).toBe(40);
+    expect(t.maquinaria.imprescindible).toBe(30); // solo la hormigonera
+    expect(t.equipamiento.imprescindible).toBe(30); // los cascos, aparte
+    expect(t.equipamiento.extra).toBe(40);
+    // Pero el imprescindible global sigue sumando las dos cosas.
+    expect(t.imprescindible).toBe(60);
   });
 
   /* Una máquina guardada antes de que existiera el tipo no trae el campo, y
@@ -903,5 +906,42 @@ describe("equipamiento", () => {
     expect(esEquipo(vieja)).toBe(false);
     expect(costeMaquina(vieja).elegido).toBe("alquilar");
     expect(costeMaquina(vieja).coste).toBe(40);
+  });
+});
+
+describe("desglose del imprescindible por partes", () => {
+  const d = datos({
+    elementos: [elemento("imprescindible", [{ cantidad: 1, precio: 1000 }])],
+    maquinas: [
+      { ...nuevaMaquina("Hormigonera"), dias: 2, precioDia: 50, fase: "imprescindible" },
+      { ...nuevoEquipo("Cascos"), cantidad: 2, precio: 20, fase: "imprescindible" },
+    ],
+    tramites: [{ ...nuevoTramite(), coste: 380 }],
+  });
+
+  it("da las cuatro patas por separado", () => {
+    expect(totales(d).partes.map(([k, , v]) => [k, v])).toEqual([
+      ["obra", 1000],
+      ["maquinaria", 100],
+      ["equipamiento", 40],
+      ["tramites", 380],
+    ]);
+  });
+
+  /* Si el desglose no suma el total, la pantalla miente en alguna fila. */
+  it("las partes suman exactamente el imprescindible", () => {
+    const t = totales(d);
+    expect(t.partes.reduce((s, [, , v]) => s + v, 0)).toBe(t.imprescindible);
+  });
+
+  it("cada parte trae su rótulo", () => {
+    for (const [k, etiqueta] of totales(d).partes) {
+      expect(k).toBeTruthy();
+      expect(etiqueta).toBeTruthy();
+    }
+  });
+
+  it("sin nada, las cuatro patas son cero", () => {
+    expect(totales(datos()).partes.every(([, , v]) => v === 0)).toBe(true);
   });
 });
