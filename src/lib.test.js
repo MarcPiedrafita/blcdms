@@ -3,7 +3,18 @@ import {
   VACIO,
   nuevaAyuda,
   ayudas,
+  frescura,
+  nuevaPlantilla,
+  nuevaLineaPlantilla,
+  nuevaLinea,
+  nuevoElemento,
+  ratios,
+  estimar,
+  desdePlantilla,
   nuevoTramite,
+  nuevoEquipo,
+  nuevaMaquina,
+  esEquipo,
   TIPOS_TRAMITE,
   URGENCIAS,
   leer,
@@ -650,5 +661,287 @@ describe("aplicar las ayudas al objetivo", () => {
   it("sin ayudas apuntadas, encender el interruptor no cambia nada", () => {
     const o = objetivo(datos({ dinero: { ...base, aplicarAyudas: true } }));
     expect(o.valor).toBe(55000);
+  });
+});
+
+describe("frescura de la información de una ayuda", () => {
+  const EN = (iso) => new Date(iso).getTime();
+
+  it("recién comprobada está fresca", () => {
+    const f = frescura("2026-08-01", EN("2026-08-06"));
+    expect(f.meses).toBe(0);
+    expect(f.estado).toBe("fresco");
+  });
+
+  it("a los cinco meses sigue fresca", () => {
+    expect(frescura("2026-03-06", EN("2026-08-06")).estado).toBe("fresco");
+  });
+
+  /* Seis meses porque las convocatorias son anuales: a partir de ahí lo
+     apuntado puede ser de una que ya cerró. */
+  it("a los seis se pone tibia", () => {
+    const f = frescura("2026-02-06", EN("2026-08-06"));
+    expect(f.meses).toBe(6);
+    expect(f.estado).toBe("tibio");
+  });
+
+  it("al año se da por vieja", () => {
+    const f = frescura("2025-08-06", EN("2026-08-06"));
+    expect(f.meses).toBe(12);
+    expect(f.estado).toBe("viejo");
+  });
+
+  it("cuenta meses cumplidos, no cambios de mes", () => {
+    // Del 20 de febrero al 6 de agosto no son seis meses todavía.
+    expect(frescura("2026-02-20", EN("2026-08-06")).meses).toBe(5);
+    expect(frescura("2026-02-06", EN("2026-08-06")).meses).toBe(6);
+  });
+
+  it("cruza el cambio de año", () => {
+    expect(frescura("2025-11-06", EN("2026-08-06")).meses).toBe(9);
+  });
+
+  it("sin fecha no inventa una antigüedad", () => {
+    expect(frescura(null).estado).toBe("sin");
+    expect(frescura(undefined).meses).toBe(null);
+  });
+
+  it("una fecha ilegible se trata como que no hay", () => {
+    expect(frescura("esto no es una fecha").estado).toBe("sin");
+  });
+
+  it("una fecha futura no da meses negativos", () => {
+    expect(frescura("2027-01-01", EN("2026-08-06")).meses).toBe(0);
+  });
+
+  it("una ayuda nueva nace comprobada hoy", () => {
+    expect(frescura(nuevaAyuda().comprobado).estado).toBe("fresco");
+  });
+});
+
+describe("plantillas: ratios y coste fijo", () => {
+  const ln = (cantidad, precio, escala = "metro") => ({ ...nuevaLineaPlantilla(), cantidad, precio, escala });
+  const el = (fase, lineas) => ({ ...nuevoElemento("c", "x"), fase, lineas });
+  const pl = (metros, elementos) => ({ ...nuevaPlantilla("p"), metros, elementos });
+
+  it("el €/m² sale solo de lo que escala", () => {
+    const r = ratios(pl(100, [el("imprescindible", [ln(1, 40000), ln(1, 9000, "fijo")])]));
+    expect(r.esencial.porMetro).toBe(40000);
+    expect(r.esencial.fijo).toBe(9000);
+    expect(r.esencial.ratio).toBe(400);
+    expect(r.esencial.total).toBe(49000);
+  });
+
+  /* El fallo que hay que evitar: si el coste fijo entrase en el ratio, una
+     casa de 50 m² saldría a mitad de precio cuando la fosa séptica cuesta
+     exactamente lo mismo. */
+  it("meter el fijo en el ratio abarataría las casas pequeñas", () => {
+    const r = ratios(pl(100, [el("imprescindible", [ln(1, 40000), ln(1, 9000, "fijo")])]));
+    expect(estimar(r.esencial, 50)).toBe(29000); // 400 × 50 + 9.000
+    expect(estimar(r.esencial, 50)).not.toBe(24500); // lo que saldría metiéndolo todo
+  });
+
+  it("los extras dan un segundo ratio, sin tocar el esencial", () => {
+    const r = ratios(pl(100, [
+      el("imprescindible", [ln(1, 30000)]),
+      el("extra", [ln(1, 10000), ln(1, 2000, "fijo")]),
+    ]));
+    expect(r.esencial.ratio).toBe(300);
+    expect(r.esencial.fijo).toBe(0);
+    expect(r.conExtras.ratio).toBe(400);
+    expect(r.conExtras.fijo).toBe(2000);
+  });
+
+  it("sin metros de referencia no inventa un ratio", () => {
+    const r = ratios(pl(0, [el("imprescindible", [ln(1, 5000)])]));
+    expect(r.sinMetros).toBe(true);
+    expect(r.ratio).toBe(undefined);
+    expect(r.esencial.ratio).toBe(0);
+    expect(r.esencial.porMetro).toBe(5000);
+  });
+
+  it("una línea sin escala marcada cuenta como que escala", () => {
+    const suelta = { ...nuevaLinea(), cantidad: 1, precio: 1000 };
+    const r = ratios(pl(100, [el("imprescindible", [suelta])]));
+    expect(r.esencial.porMetro).toBe(1000);
+    expect(r.esencial.fijo).toBe(0);
+  });
+
+  it("una plantilla vacía no revienta", () => {
+    expect(ratios(nuevaPlantilla("x")).esencial.total).toBe(0);
+    expect(ratios({}).sinMetros).toBe(true);
+  });
+
+  it("estimar es ratio por metros más el fijo", () => {
+    const r = ratios(pl(80, [el("imprescindible", [ln(1, 24000), ln(1, 6000, "fijo")])]));
+    expect(r.esencial.ratio).toBe(300);
+    expect(estimar(r.esencial, 80)).toBe(30000); // la casa de referencia
+    expect(estimar(r.esencial, 160)).toBe(54000); // el doble de metros, no el doble de dinero
+  });
+});
+
+describe("generar un presupuesto desde una plantilla", () => {
+  const base = {
+    ...nuevaPlantilla("Integral"),
+    metros: 100,
+    categorias: [{ id: "c1", nombre: "Cubierta" }],
+    elementos: [
+      {
+        ...nuevoElemento("c1", "Tejado"),
+        fase: "imprescindible",
+        lineas: [
+          { ...nuevaLineaPlantilla(), concepto: "Teja", cantidad: 200, precio: 18, escala: "metro" },
+          { ...nuevaLineaPlantilla(), concepto: "Fosa", cantidad: 1, precio: 4000, escala: "fijo" },
+        ],
+      },
+    ],
+  };
+
+  it("escala las cantidades de lo que va por metro", () => {
+    const { elementos } = desdePlantilla(base, 50);
+    expect(elementos[0].lineas[0].cantidad).toBe(100); // 200 × 0,5
+  });
+
+  it("deja intacto lo que es coste fijo", () => {
+    const { elementos } = desdePlantilla(base, 50);
+    expect(elementos[0].lineas[1].cantidad).toBe(1);
+    expect(elementos[0].lineas[1].precio).toBe(4000);
+  });
+
+  it("el presupuesto generado cuadra con lo que estimaba el ratio", () => {
+    const r = ratios(base);
+    const { elementos } = desdePlantilla(base, 50);
+    const suma = elementos.reduce((s, e) => s + totalElemento(e), 0);
+    expect(suma).toBeCloseTo(estimar(r.conExtras, 50), 2);
+  });
+
+  it("los ids son nuevos, para no pisar la plantilla al editar", () => {
+    const { categorias, elementos } = desdePlantilla(base, 100);
+    expect(categorias[0].id).not.toBe("c1");
+    expect(elementos[0].id).not.toBe(base.elementos[0].id);
+    expect(elementos[0].categoriaId).toBe(categorias[0].id);
+    expect(elementos[0].lineas[0].id).not.toBe(base.elementos[0].lineas[0].id);
+  });
+
+  it("conserva la fase de cada elemento", () => {
+    const conExtra = { ...base, elementos: [{ ...base.elementos[0], fase: "extra" }] };
+    expect(desdePlantilla(conExtra, 100).elementos[0].fase).toBe("extra");
+  });
+
+  it("a los mismos metros no cambia nada", () => {
+    const { elementos, factor } = desdePlantilla(base, 100);
+    expect(factor).toBe(1);
+    expect(elementos[0].lineas[0].cantidad).toBe(200);
+  });
+
+  it("una plantilla sin metros no multiplica por cero", () => {
+    const { factor } = desdePlantilla({ ...base, metros: 0 }, 80);
+    expect(factor).toBe(1);
+  });
+
+  it("el estado de partida es idea, aunque en la plantilla fuera otro", () => {
+    const { elementos } = desdePlantilla(base, 100);
+    expect(elementos[0].estado).toBe("idea");
+  });
+});
+
+describe("las plantillas viajan en la copia", () => {
+  it("el estado vacío las trae", () => {
+    expect(VACIO.plantillas).toEqual([]);
+  });
+
+  it("una copia anterior a las plantillas se abre con la lista vacía", () => {
+    const m = new Map();
+    globalThis.localStorage = {
+      getItem: (k) => (m.has(k) ? m.get(k) : null),
+      setItem: (k, v) => m.set(k, v),
+      removeItem: (k) => m.delete(k),
+    };
+    m.set(KEY, JSON.stringify({ categorias: [], elementos: [], ideas: [] }));
+    expect(leer().plantillas).toEqual([]);
+    delete globalThis.localStorage;
+  });
+});
+
+describe("equipamiento", () => {
+  it("un equipo nuevo se distingue de una máquina", () => {
+    expect(esEquipo(nuevoEquipo("Casco"))).toBe(true);
+    expect(esEquipo(nuevaMaquina("Hormigonera"))).toBe(false);
+  });
+
+  it("cuesta cantidad por precio, sin alquilar ni comprar", () => {
+    const c = costeMaquina({ ...nuevoEquipo("Guantes"), cantidad: 3, precio: 12.5 });
+    expect(c.coste).toBe(37.5);
+    expect(c.elegido).toBe(null);
+    expect(c.alquiler).toBe(null);
+    expect(c.compra).toBe(null);
+  });
+
+  it("a medio rellenar cuesta cero, no revienta", () => {
+    expect(costeMaquina({ ...nuevoEquipo("x"), precio: null }).coste).toBe(0);
+    expect(costeMaquina({ ...nuevoEquipo("x"), cantidad: null, precio: 20 }).coste).toBe(0);
+  });
+
+  /* Comparten lista para que el total de maquinaria salga de un solo sitio. */
+  it("suma al total de maquinaria por su fase, junto a las máquinas", () => {
+    const d = datos({
+      maquinas: [
+        { ...nuevaMaquina("Hormigonera"), dias: 3, precioDia: 10, fase: "imprescindible" },
+        { ...nuevoEquipo("Cascos"), cantidad: 2, precio: 15, fase: "imprescindible" },
+        { ...nuevoEquipo("Radio"), cantidad: 1, precio: 40, fase: "extra" },
+      ],
+    });
+    const t = totales(d);
+    expect(t.maquinaria.imprescindible).toBe(30); // solo la hormigonera
+    expect(t.equipamiento.imprescindible).toBe(30); // los cascos, aparte
+    expect(t.equipamiento.extra).toBe(40);
+    // Pero el imprescindible global sigue sumando las dos cosas.
+    expect(t.imprescindible).toBe(60);
+  });
+
+  /* Una máquina guardada antes de que existiera el tipo no trae el campo, y
+     tiene que seguir tratándose como máquina. */
+  it("una máquina antigua sin tipo no se convierte en equipo", () => {
+    const vieja = { id: "m", nombre: "Andamio", dias: 5, precioDia: 8, precioCompra: 300, decision: "auto" };
+    expect(esEquipo(vieja)).toBe(false);
+    expect(costeMaquina(vieja).elegido).toBe("alquilar");
+    expect(costeMaquina(vieja).coste).toBe(40);
+  });
+});
+
+describe("desglose del imprescindible por partes", () => {
+  const d = datos({
+    elementos: [elemento("imprescindible", [{ cantidad: 1, precio: 1000 }])],
+    maquinas: [
+      { ...nuevaMaquina("Hormigonera"), dias: 2, precioDia: 50, fase: "imprescindible" },
+      { ...nuevoEquipo("Cascos"), cantidad: 2, precio: 20, fase: "imprescindible" },
+    ],
+    tramites: [{ ...nuevoTramite(), coste: 380 }],
+  });
+
+  it("da las cuatro patas por separado", () => {
+    expect(totales(d).partes.map(([k, , v]) => [k, v])).toEqual([
+      ["obra", 1000],
+      ["maquinaria", 100],
+      ["equipamiento", 40],
+      ["tramites", 380],
+    ]);
+  });
+
+  /* Si el desglose no suma el total, la pantalla miente en alguna fila. */
+  it("las partes suman exactamente el imprescindible", () => {
+    const t = totales(d);
+    expect(t.partes.reduce((s, [, , v]) => s + v, 0)).toBe(t.imprescindible);
+  });
+
+  it("cada parte trae su rótulo", () => {
+    for (const [k, etiqueta] of totales(d).partes) {
+      expect(k).toBeTruthy();
+      expect(etiqueta).toBeTruthy();
+    }
+  });
+
+  it("sin nada, las cuatro patas son cero", () => {
+    expect(totales(datos()).partes.every(([, , v]) => v === 0)).toBe(true);
   });
 });

@@ -1,76 +1,122 @@
 import React, { useState } from "react";
-import { eur, num, nuevaMaquina, costeMaquina, totales } from "./lib.js";
+import { eur, eur2, num, nuevaMaquina, nuevoEquipo, esEquipo, costeMaquina } from "./lib.js";
 
 export default function Maquinaria({ datos, onGuardar, onQuitar, abierto, setAbierto }) {
+  /* Máquinas y equipamiento comparten lista por dentro —el total de maquinaria
+     sale de un solo sitio— pero se miran por separado, porque un casco no se
+     alquila y la comparación de alquilar o comprar ahí no pinta nada. */
+  const [vista, setVista] = useState("maquinas");
   const maquina = datos.maquinas.find((m) => m.id === abierto);
 
   /* No hay botón de guardar porque cada cambio se guarda solo. Lo que faltaba
      era poder encadenar: terminas una y sigues con la siguiente sin volver. */
-  const otra = () => {
-    const m = nuevaMaquina("");
+  const otra = (comoEquipo) => {
+    const m = comoEquipo ? nuevoEquipo("") : nuevaMaquina("");
     onGuardar({ ...datos, maquinas: [...datos.maquinas, m] });
     setAbierto(m.id);
   };
 
   if (maquina) {
-    return (
-      <Ficha
-        key={maquina.id}
-        maquina={maquina}
-        onCambio={(n) =>
-          onGuardar({ ...datos, maquinas: datos.maquinas.map((m) => (m.id === n.id ? n : m)) })
-        }
-        onBorrar={() => {
-          onQuitar(`«${maquina.nombre || "Máquina sin nombre"}» borrada`, {
-            ...datos,
-            maquinas: datos.maquinas.filter((m) => m.id !== maquina.id),
-          });
-          setAbierto(null);
-        }}
-        onOtra={otra}
-        onVolver={() => setAbierto(null)}
-      />
+    /* La clave va suelta en el JSX y no dentro del objeto: expandida no llega
+       como clave, y es la que remonta la ficha al saltar de una a otra. */
+    const props = {
+      maquina,
+      onCambio: (n) =>
+        onGuardar({ ...datos, maquinas: datos.maquinas.map((m) => (m.id === n.id ? n : m)) }),
+      onBorrar: () => {
+        onQuitar(`«${maquina.nombre || "Sin nombre"}» borrado`, {
+          ...datos,
+          maquinas: datos.maquinas.filter((m) => m.id !== maquina.id),
+        });
+        setAbierto(null);
+      },
+      onOtra: () => otra(esEquipo(maquina)),
+      onVolver: () => setAbierto(null),
+    };
+    return esEquipo(maquina) ? (
+      <FichaEquipo key={maquina.id} {...props} />
+    ) : (
+      <Ficha key={maquina.id} {...props} />
     );
   }
-  return <Lista datos={datos} onGuardar={onGuardar} setAbierto={setAbierto} />;
+
+  return (
+    <Lista
+      datos={datos}
+      onGuardar={onGuardar}
+      setAbierto={setAbierto}
+      vista={vista}
+      setVista={setVista}
+    />
+  );
 }
 
-function Lista({ datos, onGuardar, setAbierto }) {
+function Lista({ datos, onGuardar, setAbierto, vista, setVista }) {
   const [nombre, setNombre] = useState("");
   const [form, setForm] = useState(false);
   const [filtro, setFiltro] = useState("todo");
-  const t = totales(datos);
+
+  const esVistaEquipo = vista === "equipo";
+  const suyas = datos.maquinas.filter((m) => esEquipo(m) === esVistaEquipo);
 
   const crear = () => {
     if (!nombre.trim()) return;
-    const m = nuevaMaquina(nombre.trim());
+    const m = esVistaEquipo ? nuevoEquipo(nombre.trim()) : nuevaMaquina(nombre.trim());
     onGuardar({ ...datos, maquinas: [...datos.maquinas, m] });
     setNombre("");
     setForm(false);
     setAbierto(m.id);
   };
 
-  const lista = datos.maquinas.filter((m) => filtro === "todo" || m.fase === filtro);
+  const cambiarVista = (v) => {
+    setForm(false);
+    setNombre("");
+    setVista(v);
+  };
+
+  const suma = (fase) =>
+    suyas.filter((m) => m.fase === fase).reduce((s, m) => s + costeMaquina(m).coste, 0);
+
+  const lista = suyas.filter((m) => filtro === "todo" || m.fase === filtro);
 
   return (
     <>
       <header className="cab">
         <div className="marca">
-          <em>La</em>Maquinaria
+          <em>{esVistaEquipo ? "El" : "La"}</em>
+          {esVistaEquipo ? "Equipo" : "Maquinaria"}
         </div>
         <div className="sub">
-          {datos.maquinas.length} {datos.maquinas.length === 1 ? "máquina" : "máquinas"}
+          {suyas.length}{" "}
+          {esVistaEquipo
+            ? suyas.length === 1
+              ? "cosa"
+              : "cosas"
+            : suyas.length === 1
+            ? "máquina"
+            : "máquinas"}
         </div>
       </header>
+
+      <div className="seg" style={{ marginBottom: 18 }}>
+        {[
+          ["maquinas", "Máquinas"],
+          ["equipo", "Equipo"],
+        ].map(([k, l]) => (
+          <button key={k} className={vista === k ? "on" : ""} onClick={() => cambiarVista(k)}>
+            {l}
+          </button>
+        ))}
+      </div>
 
       <div className="duo" style={{ marginBottom: 18 }}>
         <div className="imp">
           <div className="k">Imprescindible</div>
-          <div className="v">{eur(t.maquinaria.imprescindible)}</div>
+          <div className="v">{eur(suma("imprescindible"))}</div>
         </div>
         <div className="ext">
           <div className="k">Extras</div>
-          <div className="v">{eur(t.maquinaria.extra)}</div>
+          <div className="v">{eur(suma("extra"))}</div>
         </div>
       </div>
 
@@ -88,9 +134,20 @@ function Lista({ datos, onGuardar, setAbierto }) {
 
       {lista.length === 0 ? (
         <div className="vacio">
-          <b>Sin máquinas</b>
-          Hormigonera, martillo eléctrico, andamio, cortadora… Pon los días que la necesitas y los dos
-          precios, y te digo si sale mejor alquilar o comprar.
+          {esVistaEquipo ? (
+            <>
+              <b>Lo que no se alquila</b>
+              Casco, guantes, gafas, botas, mascarillas, un buen juego de llaves. Va aparte de las máquinas
+              porque no hay nada que decidir: se compra. Los EPI son de los pocos gastos de una obra en los
+              que ahorrar sale caro.
+            </>
+          ) : (
+            <>
+              <b>Sin máquinas</b>
+              Hormigonera, martillo eléctrico, andamio, cortadora… Pon los días que la necesitas y los dos
+              precios, y te digo si sale mejor alquilar o comprar.
+            </>
+          )}
         </div>
       ) : (
         lista.map((m) => {
@@ -100,12 +157,16 @@ function Lista({ datos, onGuardar, setAbierto }) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="nom">{m.nombre || "Sin nombre"}</div>
                 <div className="det">
-                  {c.elegido === "alquilar"
+                  {esEquipo(m)
+                    ? m.precio != null
+                      ? `${m.cantidad || 0} × ${eur2(m.precio)}`
+                      : "Sin precio"
+                    : c.elegido === "alquilar"
                     ? `Alquilar · ${m.dias || 0} días × ${eur(m.precioDia || 0)}`
                     : c.elegido === "comprar"
                     ? "Comprar"
                     : "Sin precios"}
-                  {m.decision !== "auto" ? " · decidido por ti" : ""}
+                  {!esEquipo(m) && m.decision !== "auto" ? " · decidido por ti" : ""}
                 </div>
                 <div style={{ marginTop: 7 }}>
                   <span className={`chip ${m.fase}`}>{m.fase}</span>
@@ -124,7 +185,7 @@ function Lista({ datos, onGuardar, setAbierto }) {
               autoFocus
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              placeholder="Hormigonera"
+              placeholder={esVistaEquipo ? "Guantes de trabajo" : "Hormigonera"}
               onKeyDown={(e) => e.key === "Enter" && crear()}
             />
             <button className="btn mini" style={{ flex: "none" }} onClick={crear}>
@@ -133,8 +194,110 @@ function Lista({ datos, onGuardar, setAbierto }) {
           </div>
         ) : (
           <button className="btn pri" onClick={() => setForm(true)}>
-            + Añadir máquina
+            {esVistaEquipo ? "+ Añadir equipo" : "+ Añadir máquina"}
           </button>
+        )}
+      </div>
+    </>
+  );
+}
+
+function FichaEquipo({ maquina, onCambio, onBorrar, onOtra, onVolver }) {
+  const [conf, setConf] = useState(false);
+  const set = (k, v) => onCambio({ ...maquina, [k]: v });
+  const total = costeMaquina(maquina).coste;
+
+  return (
+    <>
+      <header className="cab" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <button className="volver" aria-label="Volver a la lista" onClick={onVolver}>
+          ←
+        </button>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="marca" style={{ fontSize: 24 }}>{maquina.nombre || "Nuevo equipo"}</div>
+        </div>
+      </header>
+
+      <div style={{ marginBottom: 13 }}>
+        <label className="lab" htmlFor="eq-nombre">Qué es</label>
+        <input
+          id="eq-nombre"
+          autoFocus={!maquina.nombre}
+          value={maquina.nombre}
+          onChange={(e) => set("nombre", e.target.value)}
+          placeholder="Guantes anticorte"
+        />
+      </div>
+
+      <div className="fila" style={{ marginBottom: 13 }}>
+        <div style={{ maxWidth: 110 }}>
+          <label className="lab" htmlFor="eq-cantidad">Cuántos</label>
+          <input
+            id="eq-cantidad"
+            inputMode="decimal"
+            value={maquina.cantidad ?? ""}
+            onChange={(e) => set("cantidad", num(e.target.value))}
+            placeholder="1"
+          />
+        </div>
+        <div>
+          <label className="lab" htmlFor="eq-precio">Precio por unidad €</label>
+          <input
+            id="eq-precio"
+            inputMode="decimal"
+            value={maquina.precio ?? ""}
+            onChange={(e) => set("precio", num(e.target.value))}
+            placeholder="12,50"
+          />
+        </div>
+      </div>
+
+      <div className="desg suma" style={{ marginBottom: 20 }}>
+        <span className="n">Total</span>
+        <span className="c">{eur2(total)}</span>
+      </div>
+
+      <div style={{ marginBottom: 13 }}>
+        <span className="lab">Fase</span>
+        <div className="seg">
+          {["imprescindible", "extra"].map((f) => (
+            <button key={f} className={maquina.fase === f ? "on" : ""} onClick={() => set("fase", f)}>
+              {f === "imprescindible" ? "Imprescindible" : "Extra"}
+            </button>
+          ))}
+        </div>
+        <div className="ayuda">
+          Solo lo imprescindible cuenta para el objetivo de ahorro. Un EPI casi siempre lo es: es lo que te
+          permite entrar a trabajar.
+        </div>
+      </div>
+
+      <div className="blq">
+        <div className="tit">Notas</div>
+        <textarea
+          rows={6}
+          value={maquina.notas}
+          onChange={(e) => set("notas", e.target.value)}
+          placeholder="Talla, norma que cumple, dónde lo viste…"
+          aria-label="Notas"
+        />
+      </div>
+
+      <div className="blq">
+        <button className="btn pri" onClick={onOtra}>
+          + Añadir otro
+        </button>
+        <div className="ayuda">Esto se guarda solo. No hace falta guardar nada.</div>
+      </div>
+
+      <div className="blq">
+        {conf ? (
+          <div className="fila">
+            <button className="btn peli" onClick={onBorrar}>Sí, borrar</button>
+            <button className="btn sec" onClick={() => setConf(false)}>No</button>
+          </div>
+        ) : (
+          <button className="btn peli" onClick={() => setConf(true)}>Borrar</button>
         )}
       </div>
     </>

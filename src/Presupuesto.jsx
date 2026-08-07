@@ -10,7 +10,6 @@ import {
   nuevaLinea,
   totalElemento,
   totalLinea,
-  totales,
 } from "./lib.js";
 
 const lineas = (n) => `${n} ${n === 1 ? "línea" : "líneas"}`;
@@ -64,7 +63,6 @@ function Lista({ datos, onGuardar, onQuitar, setAbierto }) {
   const [nombreEl, setNombreEl] = useState("");
   const [filtro, setFiltro] = useState("todo");
 
-  const t = totales(datos);
 
   const crearCat = () => {
     if (!nuevaCat.trim()) return;
@@ -96,25 +94,10 @@ function Lista({ datos, onGuardar, onQuitar, setAbierto }) {
 
   return (
     <>
-      <header className="cab">
-        <div className="marca">
-          <em>El</em>Presupuesto
-        </div>
-        <div className="sub">
-          {datos.elementos.length} elementos · {datos.categorias.length} categorías
-        </div>
-      </header>
-
-      <div className="duo" style={{ marginBottom: 18 }}>
-        <div className="imp">
-          <div className="k">Imprescindible</div>
-          <div className="v">{eur(t.obra.imprescindible)}</div>
-        </div>
-        <div className="ext">
-          <div className="k">Extras</div>
-          <div className="v">{eur(t.obra.extra)}</div>
-        </div>
-      </div>
+      {/* Aquí había un resumen de materiales por fase. Sobra: el desglose de
+          arriba ya trae la fila de materiales dentro del total de la obra, y
+          dos cifras seguidas llamadas «imprescindible» valiendo cosas
+          distintas se leen como una errata. */}
 
       <div className="seg">
         {[

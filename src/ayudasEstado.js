@@ -20,6 +20,11 @@ import { uid } from "./lib.js";
 
 export const COMPROBADO = "agosto de 2026";
 
+/* La fecha en que se comprobaron estos datos, no la de hoy: una plantilla que
+   abras en 2028 sigue trayendo lo que se miró en 2026, y la app tiene que
+   poder avisarte de eso en vez de fingir que está recién mirada. */
+export const FECHA_COMPROBACION = "2026-08-06";
+
 const req = (texto, cumplido = "?") => ({ id: uid(), texto, cumplido });
 
 export const PLANTILLAS = [
@@ -32,6 +37,7 @@ export const PLANTILLAS = [
       organismo: "Estado · Plan Estatal de Vivienda 2026-2030, la gestiona tu comunidad",
       importe: null,
       estado: "explorando",
+      comprobado: FECHA_COMPROBACION,
       notas:
         "Real Decreto 326/2026, de 22 de abril (BOE del 23), Línea 3. En vigor desde el 24 de abril de 2026.\n\n" +
         "Cuánto es: el 20% del precio de compra, con un tope de 15.000 €. Como el tope del 20% suele morder antes " +
@@ -61,6 +67,7 @@ export const PLANTILLAS = [
       organismo: "Estado · Plan Estatal de Vivienda 2026-2030, la gestiona tu comunidad",
       importe: null,
       estado: "explorando",
+      comprobado: FECHA_COMPROBACION,
       notas:
         "Real Decreto 326/2026, Línea 2 (rehabilitación, accesibilidad y renovación urbana y rural).\n\n" +
         "Topes por vivienda según el tipo de obra:\n" +

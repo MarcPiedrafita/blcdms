@@ -19,6 +19,7 @@ export const VACIO = {
   ideas: [],
   tramites: [],
   ayudas: [],
+  plantillas: [],
   ultimaCopia: null,
 };
 
@@ -38,6 +39,7 @@ export function leer() {
       // Una copia hecha antes de que existieran los trámites no trae el campo.
       tramites: d.tramites || [],
       ayudas: d.ayudas || [],
+      plantillas: d.plantillas || [],
     };
   } catch (e) {
     return VACIO;
@@ -109,8 +111,109 @@ export const nuevaLinea = () => ({
   enlace: "",
 });
 
+/* ---------- plantillas de presupuesto ----------
+ *
+ *  Un presupuesto tipo sobre una casa de referencia de X metros, para poder
+ *  sacar un €/m² con el que comparar casas antes de comprarlas.
+ *
+ *  La marca va en la línea y no en el elemento porque un mismo elemento puede
+ *  llevar de las dos: la fontanería escala con los metros, pero la acometida
+ *  que la alimenta cuesta lo mismo en una casa de 60 que en una de 200. */
+export const ESCALAS = [
+  ["metro", "Por metro"],
+  ["fijo", "Coste fijo"],
+];
+
+export const nuevaLineaPlantilla = () => ({ ...nuevaLinea(), escala: "metro" });
+
+export const nuevaPlantilla = (nombre = "") => ({
+  id: uid(),
+  nombre,
+  metros: 100,
+  categorias: [],
+  elementos: [],
+  creada: Date.now(),
+});
+
+/** Lo que cuesta la plantilla, partido en lo que escala y lo que no.
+ *
+ *  Cada mitad sale además en dos versiones, solo lo imprescindible y con los
+ *  extras, que es el mismo corte que ya usa el presupuesto. */
+export function ratios(p) {
+  const metros = Number(p?.metros) || 0;
+  const acc = {
+    imprescindible: { metro: 0, fijo: 0 },
+    extra: { metro: 0, fijo: 0 },
+  };
+
+  for (const e of p?.elementos || []) {
+    const fase = e.fase === "extra" ? "extra" : "imprescindible";
+    for (const l of e.lineas || []) {
+      acc[fase][l.escala === "fijo" ? "fijo" : "metro"] += totalLinea(l);
+    }
+  }
+
+  const arma = (porMetro, fijo) => ({
+    porMetro,
+    fijo,
+    /* Sin metros de referencia el ratio no existe. Devolver 0 sería mentir
+       menos que dividir entre cero, pero igual hay que enseñarlo aparte. */
+    ratio: metros > 0 ? porMetro / metros : 0,
+    total: porMetro + fijo,
+  });
+
+  const esencial = arma(acc.imprescindible.metro, acc.imprescindible.fijo);
+  const conExtras = arma(
+    acc.imprescindible.metro + acc.extra.metro,
+    acc.imprescindible.fijo + acc.extra.fijo
+  );
+
+  return { metros, esencial, conExtras, sinMetros: metros <= 0 };
+}
+
+/** Lo que costaría esa plantilla en una casa de `m` metros. */
+export const estimar = (r, m) => r.ratio * (Number(m) || 0) + r.fijo;
+
+/** Categorías y elementos nuevos, con las cantidades por metro ya escaladas.
+ *
+ *  Las líneas de coste fijo se copian tal cual: una fosa séptica no se
+ *  multiplica por los metros de la casa. */
+export function desdePlantilla(p, metrosReales) {
+  const origen = Number(p?.metros) || 0;
+  const destino = Number(metrosReales) || 0;
+  const factor = origen > 0 ? destino / origen : 1;
+
+  const mapaCat = new Map();
+  const categorias = (p?.categorias || []).map((c) => {
+    const nueva = nuevaCategoria(c.nombre);
+    mapaCat.set(c.id, nueva.id);
+    return nueva;
+  });
+
+  const elementos = (p?.elementos || []).map((e) => ({
+    ...nuevoElemento(mapaCat.get(e.categoriaId) || null, e.nombre),
+    fase: e.fase === "extra" ? "extra" : "imprescindible",
+    notas: e.notas || "",
+    lineas: (e.lineas || []).map((l) => ({
+      ...nuevaLinea(),
+      concepto: l.concepto,
+      unidad: l.unidad,
+      precio: l.precio,
+      tienda: l.tienda || "",
+      enlace: l.enlace || "",
+      cantidad:
+        l.escala === "fijo"
+          ? l.cantidad
+          : Math.round((Number(l.cantidad) || 0) * factor * 100) / 100,
+    })),
+  }));
+
+  return { categorias, elementos, factor };
+}
+
 export const nuevaMaquina = (nombre) => ({
   id: uid(),
+  tipo: "maquina",
   nombre,
   dias: null,
   precioDia: null,
@@ -120,6 +223,25 @@ export const nuevaMaquina = (nombre) => ({
   notas: "",
   creada: Date.now(),
 });
+
+/* Equipamiento: EPIs, herramienta de mano, consumibles.
+ *
+ *  Comparte lista con las máquinas para que el total de maquinaria salga de un
+ *  solo sitio, pero no tiene alquilar ni comprar: un casco se compra y punto.
+ *  Lo que sí tiene y una máquina no es cantidad —tres pares de guantes— porque
+ *  el equipamiento se compra a puñados. */
+export const nuevoEquipo = (nombre) => ({
+  id: uid(),
+  tipo: "equipo",
+  nombre,
+  cantidad: 1,
+  precio: null,
+  fase: "imprescindible",
+  notas: "",
+  creada: Date.now(),
+});
+
+export const esEquipo = (m) => m?.tipo === "equipo";
 
 export const nuevaIdea = () => ({
   id: uid(),
@@ -187,8 +309,30 @@ export const nuevaAyuda = () => ({
   estado: "explorando",
   notas: "",
   requisitos: [],
+  comprobado: hoy(), // cuándo miraste por última vez si esto sigue siendo verdad
   creada: Date.now(),
 });
+
+/* Cuánto hace que no compruebas una ayuda.
+ *
+ *  Los seis meses no son un número redondo cualquiera: las convocatorias
+ *  autonómicas salen una vez al año, así que a partir de medio año lo que
+ *  tengas apuntado puede ser de una convocatoria que ya cerró. Al año se da
+ *  por viejo directamente.
+ *
+ *  `ahora` se pasa por fuera para que los tests no dependan del reloj. */
+export function frescura(comprobado, ahora = Date.now()) {
+  if (!comprobado) return { meses: null, estado: "sin" };
+  const d = new Date(comprobado);
+  const n = new Date(ahora);
+  if (isNaN(d)) return { meses: null, estado: "sin" };
+
+  let meses = (n.getFullYear() - d.getFullYear()) * 12 + (n.getMonth() - d.getMonth());
+  if (n.getDate() < d.getDate()) meses--;
+  meses = Math.max(0, meses);
+
+  return { meses, estado: meses >= 12 ? "viejo" : meses >= 6 ? "tibio" : "fresco" };
+}
 
 /* ---------- cálculos ---------- */
 
@@ -197,6 +341,18 @@ export const totalLinea = (l) => (Number(l.cantidad) || 0) * (Number(l.precio) |
 export const totalElemento = (e) => (e.lineas || []).reduce((s, l) => s + totalLinea(l), 0);
 
 export function costeMaquina(m) {
+  /* El equipamiento no se alquila: sale de multiplicar cantidad por precio.
+     Se resuelve aquí y no en otra función para que `totales` siga recorriendo
+     una sola lista sin enterarse de la diferencia. */
+  if (esEquipo(m)) {
+    return {
+      alquiler: null,
+      compra: null,
+      elegido: null,
+      coste: (Number(m.cantidad) || 0) * (Number(m.precio) || 0),
+    };
+  }
+
   const alquiler =
     m.dias != null && m.precioDia != null ? (Number(m.dias) || 0) * (Number(m.precioDia) || 0) : null;
   const compra = m.precioCompra != null ? Number(m.precioCompra) : null;
@@ -218,9 +374,12 @@ export function totales(d) {
   const r = {
     obra: { imprescindible: 0, extra: 0 },
     maquinaria: { imprescindible: 0, extra: 0 },
+    equipamiento: { imprescindible: 0, extra: 0 },
   };
   for (const e of d.elementos) r.obra[e.fase] += totalElemento(e);
-  for (const m of d.maquinas) r.maquinaria[m.fase] += costeMaquina(m).coste;
+  for (const m of d.maquinas || []) {
+    r[esEquipo(m) ? "equipamiento" : "maquinaria"][m.fase] += costeMaquina(m).coste;
+  }
 
   /* Los trámites que cuestan dinero cuentan enteros como imprescindibles: sin
      la licencia no hay obra y sin la cédula no entras a vivir, así que no hay
@@ -233,9 +392,21 @@ export function totales(d) {
      dos lados se quedan quietos y la diferencia sigue siendo verdad. */
   const tramites = (d.tramites || []).reduce((s, t) => s + (Number(t.coste) || 0), 0);
 
-  const imprescindible = r.obra.imprescindible + r.maquinaria.imprescindible + tramites;
-  const extra = r.obra.extra + r.maquinaria.extra;
-  return { ...r, tramites, imprescindible, extra, total: imprescindible + extra };
+  const imprescindible =
+    r.obra.imprescindible + r.maquinaria.imprescindible + r.equipamiento.imprescindible + tramites;
+  const extra = r.obra.extra + r.maquinaria.extra + r.equipamiento.extra;
+
+  /* Las cuatro patas del imprescindible, en el orden en que se enseñan. Sacar
+     el desglose de aquí evita que cada pantalla lo recomponga a su manera y se
+     desvíe del total. */
+  const partes = [
+    ["obra", "Materiales de obra", r.obra.imprescindible],
+    ["maquinaria", "Maquinaria", r.maquinaria.imprescindible],
+    ["equipamiento", "Equipo y EPIs", r.equipamiento.imprescindible],
+    ["tramites", "Trámites y licencias", tramites],
+  ];
+
+  return { ...r, tramites, partes, imprescindible, extra, total: imprescindible + extra };
 }
 
 /** Lo que esperas cobrar en ayudas, partido por lo firme que es cada una. */
